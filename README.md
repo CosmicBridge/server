@@ -1,5 +1,5 @@
-# server
-Server node for Cosmic Bridge. Manages the Cosmos chain and Bitcoin integration.
+# Cosmic Bridge
+Server node for the Cosmic Bridge application. Manages tracking payments/balance on the Cosmos chain and bundled scheduled payouts on the Bitcoin mainnet.
 
 
 ### Concept
