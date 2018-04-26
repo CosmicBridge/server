@@ -15,9 +15,9 @@ For example, an operating frequency of one week means the following:
 * Users save transaction fees by bundling up transactions on the bitcoin network.
 
 
-### To Run:
+### Setup:
 
-From the `src` directory:
+To start a Cosmic Bridge node, run the following command from the `/src` directory:
 
 <pre>
 npm install && npm start
@@ -26,7 +26,7 @@ npm install && npm start
 ### Dev Notes
 
 
-Powered by:
+Powered by:<br/>
 <img src="./img/lotion.png" style="width: 300px"/>
 
 
