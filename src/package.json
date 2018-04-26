@@ -1,0 +1,28 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Cosmic Bridge Server Node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CosmicBridge/server.git"
+  },
+  "keywords": [
+    "cosmos",
+    "bitcoin",
+    "lightning",
+    "network",
+    "payments",
+    "off-chain",
+    "microtransactions"
+  ],
+  "author": "Cosmic Bridge",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CosmicBridge/server/issues"
+  },
+  "homepage": "https://github.com/CosmicBridge/server#readme"
+}
