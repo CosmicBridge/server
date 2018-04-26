@@ -1,12 +1,13 @@
 # Cosmic Bridge
 Server node for the Cosmic Bridge application. Manages tracking payments/balance on the Cosmos chain and bundled scheduled payouts on the Bitcoin mainnet.
 
+For architectural overview, see here: https://docs.google.com/presentation/d/1-8MP2yRhTy7D1YDUiauJoJ1g_ppXQbRpk0YTQ0ZFEzw/edit#slide=id.g3772f84a12_0_18
 
 ### Concept
 
 The Cosmic Bridge server node both serves as a validator/facilitator of transactions and a repository of funds.
 
-In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address. Once bitcoin has been received, users can batch bitcoin transactions off-chain using Lotion.js which will be paid out at a regular operating frequency.
+In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address - a specific wallet on the Bitcoin blockchain. Once bitcoin has been received, users can batch bitcoin transactions off-chain using Lotion.js which will be paid out at a regular operating frequency.
 
 For example, an operating frequency of one week means the following:
 
