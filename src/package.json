@@ -24,5 +24,11 @@
   "bugs": {
     "url": "https://github.com/CosmicBridge/server/issues"
   },
-  "homepage": "https://github.com/CosmicBridge/server#readme"
+  "homepage": "https://github.com/CosmicBridge/server#readme",
+  "dependencies": {
+    "coins": "^3.1.2",
+    "lotion": "^0.1.18",
+    "node-schedule": "^1.3.0",
+    "secp256k1": "^3.5.0"
+  }
 }
