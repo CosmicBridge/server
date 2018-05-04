@@ -15,6 +15,13 @@ For example, an operating frequency of one week means the following:
 * These transactions will be posted/validated by the cosmos distributed network, bundled, and paid out at the end of each week interval.
 * Users save transaction fees by bundling up transactions on the bitcoin network.
 
+### Potential Uses
+
+Cosmic Bridge can be used for any application that requires cheap, fast and auditable settlement of Bitcoin transactions, assuming periodical on-Bitcoin-chain settlement is acceptable. Payment Zones can be free for anyone to join, or limited to certain parties. Some potential applications:
+
+* Bitcoin micropayments
+* Dark pools of BTC liquidity between exchanges or large traders
+* A merchant network supporting free bitcoin payments for participating merchants
 
 ### Setup:
 
