@@ -1,8 +1,11 @@
 /*
-  To load a balance of 3 BTC onto ADDRESS1, just do:
+  To load a balance of 3 satoshis onto ADDRESS1, just do:
     curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":3.0}'
 
-  To make a microtransaction of 2 BTC from ADDRESS1 to ADDRESS2, just do:
+  To payout a balance of 3 satoshis onto ADDRESS1, just do:
+    curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":3.0}'
+
+  To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
     curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0}'
 
   To check the balance of ADDRESS1, just do:
@@ -25,7 +28,7 @@
 */
 
 //Need to see how javascript handles public final constant for fee
-networkfee = 0.001
+//networkfee = 0.001
 
 let app = require('lotion')({
   initialState: {
@@ -39,11 +42,20 @@ let app = require('lotion')({
   devMode: true
 })
 
+
 app.use((state, tx) => {
   if (typeof tx.address === 'string' && typeof tx.val === 'number') {
-    console.log(`Balance loaded for an amount of ${tx.val} satoshis from ${tx.address}.`);
     // TODO Add transaction hash checking for validator number to make sure that the balance is actually loaded to the server wallet
-    loadBalance(tx.address, "bcointransactionhash", tx.val)
+    if (tx.val > 0) {
+      console.log(`Balance added for an amount of ${tx.val} satoshis from ${tx.address}.`);
+      loadBalance(state, tx.address, "bcointransactionhash", tx.val)
+    } else if (tx.val < 0) {
+      console.log(`Balance paid out for an amount of ${tx.val} satoshis to ${tx.address}.`);
+      payout(state, tx.address, "bcointransactionhash", tx.val)
+    } else {
+      console.log('This is a fake POST call')
+      // TODO block fake post calls to prevent server slowdown
+    }
   } else if (typeof tx.fromAddress === 'string' && typeof tx.toAddress === 'string' && typeof tx.val === 'number') {
     console.log(`Payment order received for an amount of ${tx.val} satoshis from ${tx.fromAddress} to ${tx.toAddress}.`);
     // TODO Validate proof of ownership of the address on behalf of the sender - should be in the payload. Also must be sent over HTTPS
@@ -55,7 +67,7 @@ app.use((state, tx) => {
   }
 })
 
-
+app.listen(3000)
 
 
 /*
@@ -70,18 +82,18 @@ function checkBcoinChain(bcointransactionhash, numValidators) {
 /*
   Changes the balance of UID by DELTA. DELTA may be negative
 */
-function deltaBalance(uid, delta) {
-  balances[uid] = balances[uid] + delta
+function deltaBalance(state, uid, delta) {
+  state.balances[uid] = state.balances[uid] + delta
 }
 
 /*
   Perform a microtransaction from wallet of UIDPAYER to wallet of
   UIDRECEIVER for the amount of bitcoin VAL. Return true if successful
 */
-function microTransact(uidPayer, uidReceiver, val) {
-  if (checkBalance(uidPayer)) {
-    deltaBalance(uidPayer, -1*val)
-    deltaBalance(uidReceiver, val)
+function microTransact(state, uidPayer, uidReceiver, val) {
+  if (checkBalance(state, uidPayer)) {
+    deltaBalance(state, uidPayer, -1*val)
+    deltaBalance(state, uidReceiver, val)
     return true
   }
   return false
@@ -91,8 +103,8 @@ function microTransact(uidPayer, uidReceiver, val) {
   Checks the balance to make sure that the wallet of UID has at least
   VAL bitcoin
 */
-function checkBalance(uid, val) {
-  if (balances[uid] && balances[uid] >= val) {
+function checkBalance(state, uid, val) {
+  if (state.balances[uid] && state.balances[uid] >= val) {
     return true
   }
   return false
@@ -102,13 +114,26 @@ function checkBalance(uid, val) {
   If UID does not exist, adds it to the wallet. Otherwise, checks the bcoin
   chain until TRANSACTIONHA
 */
-function loadBalance(uid, bcointransactionhash, val) {
-  if (balances[uid]) {
-    deltaBalance(uid, val)
+function loadBalance(state, uid, bcointransactionhash, val) {
+  if (state.balances[uid]) {
+    deltaBalance(state, uid, val)
   } else {
-    balances[uid] = val
+    state.balances[uid] = val
   }
 }
+
+/*
+  Performs a transaction on the bitcoin blockchain to payout to UID for
+  VAL and makes sure that the transaction goes through
+*/
+function payout(state, uid, bcointransactionhash, val) {
+  if (checkBalance(state, uid, val)) {
+    deltaBalance(state, uid, val)
+  } else {
+    console.log("Not enough funds")
+  }
+}
+
 
 /*
   If bcoin doesn't have a way to do private key encryption and decryption
@@ -132,13 +157,3 @@ function initializeWallet() {
 function decryptWallet() {
   //return AESdecrypt(wallet)
 }
-
-/*
-  Performs a transaction on the bitcoin blockchain to payout to UID for
-  VAL and makes sure that the transaction goes through
-*/
-function payout(UID, val) {
-  
-}
-
-app.listen(3000)
