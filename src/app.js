@@ -62,10 +62,10 @@ app.use((state, tx) => {
       // TODO Add transaction hash checking for validator number to make sure that the balance is actually loaded to the server wallet
       if (tx.val > 0) {
         console.log(`Balance added for an amount of ${tx.val} satoshis from ${tx.address}.`);
-        loadBalance(state, tx.address, "bcointransactionhash", tx.val)
+        loadBalance(state, tx.address, tx.val)
       } else if (tx.val < 0) {
         console.log(`Balance paid out for an amount of ${tx.val} satoshis to ${tx.address}.`);
-        payout(state, tx.address, "bcointransactionhash", tx.val)
+        payout(state, tx.address, tx.val)
       } else {
         console.log('This is a fake POST call')
         // TODO block fake post calls to prevent server slowdown
@@ -107,16 +107,6 @@ function payoutTask() {
         });
     });
 }
-
-
-/*
-  BCOINTRANSACTIONHASH is a string representing the transaction hash of
-  the initiated transaction. Queries bcoin server and if the NUMVALIDATORS
-  is satisfied, return true. Otherwise, return false
-*/
-function checkBcoinChain(bcointransactionhash, numValidators) {
-    return true
-  }
   
   /*
     Changes the balance of UID by DELTA. DELTA may be negative
@@ -151,10 +141,9 @@ function checkBcoinChain(bcointransactionhash, numValidators) {
   }
   
   /*
-    If UID does not exist, adds it to the wallet. Otherwise, checks the bcoin
-    chain until TRANSACTIONHA
+    If UID does not exist, adds it to the wallet. Otherwise, adds VAL to the balance of UID
   */
-  function loadBalance(state, uid, bcointransactionhash, val) {
+  function loadBalance(state, uid, val) {
     if (state.balances[uid]) {
       deltaBalance(state, uid, val)
     } else {
@@ -164,37 +153,12 @@ function checkBcoinChain(bcointransactionhash, numValidators) {
   
   /*
     Performs a transaction on the bitcoin blockchain to payout to UID for
-    VAL and makes sure that the transaction goes through
+    VAL
   */
-  function payout(state, uid, bcointransactionhash, val) {
+  function payout(state, uid, val) {
     if (checkBalance(state, uid, val)) {
       deltaBalance(state, uid, val)
     } else {
       console.log("Not enough funds")
     }
   }
-  
-  
-  /*
-    If bcoin doesn't have a way to do private key encryption and decryption
-    then will need to implement ourselves using AES. This function will
-    only be called once by the node that initializes the APP. However, this
-    isn't very secure since the users of the node that initializes the chain
-    has access to the private key (which will be the bcoin server). 
-    Maybe make this a multi-sig wallet that gets created from BCOIN and give
-    access to all APP validators?
-  */
-  function initializeWallet() {
-    //return AESencrypt('/home/.wallet/bcoinprivkey')
-  }
-  
-  /*
-    This function decrypts the wallet to get the privatekey. Need to make
-    sure that this part is not able to be debugged so that the privatekey
-    cannot be reverse engineered. If bcoin has some sort of functinoality
-    that can replace this, that would be best
-  */
-  function decryptWallet() {
-    //return AESdecrypt(wallet)
-  }
-  
