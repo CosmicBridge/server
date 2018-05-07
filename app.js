@@ -1,6 +1,14 @@
-let shea = require('shea')
-
 /*
+  To load a balance of 3 BTC onto ADDRESS1, just do:
+    curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":3.0}'
+
+  To make a microtransaction of 2 BTC from ADDRESS1 to ADDRESS2, just do:
+    curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0}'
+
+  To check the balance of ADDRESS1, just do:
+    curl http://localhost:PORT/state
+    Which returns a JSON dictionary, and then use the key 'balances' and then key 'ADDRESS1' to get the balance for ADDRESS1
+
   WALLET is the single wallet tied to the server and should be secured
   such that nobody can access the private key, and only the APP and the
   validators running the APP can perform transactions on the bitcoin 
@@ -21,7 +29,8 @@ networkfee = 0.001
 
 let app = require('lotion')({
   initialState: {
-    wallet: intializeWallet(),
+    //wallet: intializeWallet(),
+    wallet: {},
     balances: {},
     userwallets:{},
     scheduledpayout: {},
@@ -31,10 +40,23 @@ let app = require('lotion')({
 })
 
 app.use((state, tx) => {
-  if (typeof tx.username === 'string' && typeof tx.message === 'string') {
-    state.messages.push({ username: tx.username, message: tx.message })
+  if (typeof tx.address === 'string' && typeof tx.val === 'number') {
+    console.log(`Balance loaded for an amount of ${tx.val} satoshis from ${tx.address}.`);
+    // TODO Add transaction hash checking for validator number to make sure that the balance is actually loaded to the server wallet
+    loadBalance(tx.address, "bcointransactionhash", tx.val)
+  } else if (typeof tx.fromAddress === 'string' && typeof tx.toAddress === 'string' && typeof tx.val === 'number') {
+    console.log(`Payment order received for an amount of ${tx.val} satoshis from ${tx.fromAddress} to ${tx.toAddress}.`);
+    // TODO Validate proof of ownership of the address on behalf of the sender - should be in the payload. Also must be sent over HTTPS
+    if (microTransact(tx.fromAddress, tx.toAddress, tx.val)) {
+      console.log('Success')
+    } else {
+      console.log("Failed, not enough balance or invalid address given")
+    }
   }
 })
+
+
+
 
 /*
   BCOINTRANSACTIONHASH is a string representing the transaction hash of
@@ -70,7 +92,7 @@ function microTransact(uidPayer, uidReceiver, val) {
   VAL bitcoin
 */
 function checkBalance(uid, val) {
-  if (balances[uid] >= val) {
+  if (balances[uid] && balances[uid] >= val) {
     return true
   }
   return false
@@ -98,7 +120,7 @@ function loadBalance(uid, bcointransactionhash, val) {
   access to all APP validators?
 */
 function initializeWallet() {
-  return AESencrypt('/home/.wallet/bcoinprivkey')
+  //return AESencrypt('/home/.wallet/bcoinprivkey')
 }
 
 /*
@@ -108,7 +130,7 @@ function initializeWallet() {
   that can replace this, that would be best
 */
 function decryptWallet() {
-  return AESdecrypt(wallet)
+  //return AESdecrypt(wallet)
 }
 
 /*
@@ -118,8 +140,5 @@ function decryptWallet() {
 function payout(UID, val) {
   
 }
-
-
-app.use(shea('public/'))
 
 app.listen(3000)

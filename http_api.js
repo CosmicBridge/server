@@ -5,6 +5,7 @@
 
 // Handles calls from the Cosmic Bridge wallet and potentially, other clients
 
+var http = require('http')
 var express = require('express'); // HTTP Framework
 var config = require('config'); // Config file utility (see https://github.com/lorenwest/node-config)
 
@@ -41,6 +42,7 @@ app.post('/pay/:fromAddress/:toAddress/:howMuch', function(req, res) {
   // TODO Validate proof of ownership of the address on behalf of the sender - should be in the payload. Also must be sent over HTTPS
 
   // TODO Perform the actual payment in the Cosmos chain
+  
 
   res.send('Okay');
 });

@@ -46,7 +46,7 @@ let { createHash, randomBytes } = require('crypto')
 let tar = require('tar')
 
 let GCI = argv._[0] || ''
-GCI = '00742b947cdb4b31b9faf64719403f352b8abfaab268a9c3d81c2740ad1d7c1a'
+GCI = 'bf5115894ce043f41666af3b150cf264b8072a7990aa4f6ae7da186d197c81dd'
 let gatewayMode = argv.g || false
 
 let { connect } = require('lotion')
