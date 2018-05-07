@@ -26,6 +26,8 @@ let payoutJob;
 
   To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
     curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0}'
+        or
+    curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":-2.0}'
 
   To check the balance of ADDRESS1, just do:
     curl http://localhost:PORT/state
@@ -128,9 +130,10 @@ function checkBcoinChain(bcointransactionhash, numValidators) {
     UIDRECEIVER for the amount of bitcoin VAL. Return true if successful
   */
   function microTransact(state, uidPayer, uidReceiver, val) {
-    if (checkBalance(state, uidPayer, val)) {
-      deltaBalance(state, uidPayer, -1*val)
-      deltaBalance(state, uidReceiver, val)
+    absVal = Math.abs(val)
+    if (checkBalance(state, uidPayer, absVal)) {
+      deltaBalance(state, uidPayer, -1*absVal)
+      deltaBalance(state, uidReceiver, absVal)
       return true
     }
     return false
