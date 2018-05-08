@@ -1,6 +1,6 @@
 const axios = require('axios');
 const test = require('tape-promise/tape');
-const lotion = require('../src/client.js');
+const lotion = require('lotion');
 const rimraf = require('rimraf');
 
 const BASE_URL = `http://localhost:3000`;
