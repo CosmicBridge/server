@@ -31,6 +31,30 @@ To start a Cosmic Bridge node, run the following command from the `/src` directo
 npm install && npm start
 </pre>
 
+### Interacting with the Payment Zone or Lotion App:
+
+To load a balance of 3 satoshis onto ADDRESS1, just do:
+
+  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":3.0}'`
+  
+To payout a balance of 3 satoshis onto ADDRESS1, just do:
+
+  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":-3.0}'`
+  
+To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
+
+ `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0}'`
+ 
+  or
+      
+  `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":-2.0}'`
+  
+To check the balance of ADDRESS1, just do:
+
+  `curl http://localhost:PORT/state`
+  
+  Which returns a JSON dictionary, and then use the key 'balances' and then key 'ADDRESS1' to get the balance for ADDRESS1
+
 ### Dev Notes
 
 Configuration files are loaded from the `/config` sub-directory. The file `default.json` contains development configuration values, while `production.json` contains production configuration values.
