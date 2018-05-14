@@ -73,14 +73,6 @@ const library = (function () {
         return paymentMap
     }
 
-
-    /*
-     * Changes the balance of UID by DELTA. DELTA may be negative
-     */
-    function deltaBalance(state, uid, delta) {
-        state.balances[uid] = state.balances[uid] + delta
-    }
-
     /*
      Perform a microtransaction from wallet of UIDPAYER to wallet of
      UIDRECEIVER for the amount of bitcoin VAL. Return true if successful
@@ -88,8 +80,8 @@ const library = (function () {
     function microTransact(state, uidPayer, uidReceiver, val) {
         absVal = Math.abs(val)
         if (hasSufficientBalance(state, uidPayer, absVal)) {
-            deltaBalance(state, uidPayer, -1 * absVal)
-            deltaBalance(state, uidReceiver, absVal)
+            addBalance(state, uidPayer, -1 * absVal)
+            addBalance(state, uidReceiver, absVal)
             return true
         }
         return false
@@ -106,9 +98,9 @@ const library = (function () {
     /*
      If UID does not exist, adds it to the wallet. Otherwise, adds VAL to the balance of UID
      */
-    function loadBalance(state, uid, val) {
+    function addBalance(state, uid, val) {
         if (state.balances[uid]) {
-            deltaBalance(state, uid, val)
+            state.balances[uid] = state.balances[uid] + val
         } else {
             state.balances[uid] = val
         }
@@ -120,13 +112,14 @@ const library = (function () {
      */
     function payout(state, uid, val) {
         if (hasSufficientBalance(state, uid, val)) {
-            deltaBalance(state, uid, val)
+            addBalance(state, uid, val)
         } else {
-            console.log("Not enough funds")
+            console.error("Not enough funds", JSON.stringify(state), uid, val);
+            throw 'Not enough funds';
         }
     }
 
-    async function clearBalance(uid, state) {
+    async function payoutBalance(uid, state) {
         const balance = state.balance[uid];
         const tx = await helper.creditBitcoinToReceiver(balance, 500);
         // If the balance has been successfully settled using bcoin, clear the owed balance and update the last zero time
@@ -140,9 +133,8 @@ const library = (function () {
 
     return {
         payout: payout,
-        clearBalance: clearBalance,
-        deltaBalance: deltaBalance,
-        loadBalance: loadBalance,
+        payoutBalance: payoutBalance,
+        addBalance: addBalance,
         hasSufficientBalance: hasSufficientBalance,
         microTransact: microTransact,
         groupPayments: groupPayments,

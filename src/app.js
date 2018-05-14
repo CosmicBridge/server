@@ -62,7 +62,7 @@ app.use((state, tx) => {
         // TODO Add transaction hash checking for validator number to make sure that the balance is actually loaded to the server wallet
         if (tx.val > 0) {
             console.log(`Balance added for an amount of ${tx.val} satoshis from ${tx.address}.`);
-            helper.loadBalance(state, tx.address, tx.val)
+            helper.addBalance(state, tx.address, tx.val)
         } else if (tx.val < 0) {
             console.log(`Balance paid out for an amount of ${tx.val} satoshis to ${tx.address}.`);
             helper.payout(state, tx.address, tx.val)
@@ -108,7 +108,7 @@ function payoutTask() {
                 shouldSettle = true;
             }
             if (state.balances[uid] > 0 && shouldSettle) {
-                helper.clearBalance(uid, state);
+                helper.payoutBalance(uid, state);
             }
         })
     });
