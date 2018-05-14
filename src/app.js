@@ -2,11 +2,10 @@ const axios = require('axios');
 const lotion = require('lotion');
 const schedule = require('node-schedule');
 
-const bridge = require('./bridge');
+const helper = require('./helper');
 
 const BASE_URL = process.env.COSMOS_BRIDGE_URL || 'http://localhost';
 const PORT = process.env.COSMOS_BRIDGE_PORT || 3000;
-
 
 // Configurable recurrence rule for running payout job.
 // Currently set for every Sunday at 5:00pm.
@@ -40,10 +39,10 @@ let payoutJob;
  validators running the APP can perform transactions on the bitcoin
  blockchain with the WALLET
 
- BALANCES is a dictionary of a UID (unique identifier or public key) to the amount of
- bitcoin tied to that balance.
+ balances: dictionary of a UID (unique identifier or public key) to the amount of bitcoin (in satoshis) tied to that balance.
 
- PAYMENTS is a an array for payments that will be settled (cleared) at the end of the next payment period.
+ lastZero: dictionary showing when the last time a particular user account has been credited. Make sure at least one
+    settlement interval before paying out the balance.
  */
 
 let app = lotion({
@@ -63,10 +62,10 @@ app.use((state, tx) => {
         // TODO Add transaction hash checking for validator number to make sure that the balance is actually loaded to the server wallet
         if (tx.val > 0) {
             console.log(`Balance added for an amount of ${tx.val} satoshis from ${tx.address}.`);
-            loadBalance(state, tx.address, tx.val)
+            helper.loadBalance(state, tx.address, tx.val)
         } else if (tx.val < 0) {
             console.log(`Balance paid out for an amount of ${tx.val} satoshis to ${tx.address}.`);
-            payout(state, tx.address, tx.val)
+            helper.payout(state, tx.address, tx.val)
         } else {
             console.log('This is a fake POST call')
             // TODO block fake post calls to prevent server slowdown
@@ -74,7 +73,7 @@ app.use((state, tx) => {
     } else if (typeof tx.fromAddress === 'string' && typeof tx.toAddress === 'string' && typeof tx.val === 'number') {
         console.log(`Payment order received for an amount of ${tx.val} satoshis from ${tx.fromAddress} to ${tx.toAddress}.`);
         // TODO Validate proof of ownership of the address on behalf of the sender - should be in the payload. Also must be sent over HTTPS
-        if (microTransact(state, tx.fromAddress, tx.toAddress, tx.val)) {
+        if (helper.microTransact(state, tx.fromAddress, tx.toAddress, tx.val)) {
             console.log('Success')
         } else {
             console.log("Failed, not enough balance or invalid address given")
@@ -93,16 +92,6 @@ function getState() {
     return axios.get(`${BASE_URL}:${PORT}/state`).then(res => res.data)
 }
 
-async function clearBalance(uid, state) {
-    const balance = state.balance[uid];
-    const tx = await bridge.creditBitcoinToReceiver(balance, 500);
-    // once the balance has been delivered, clear the owed balance and update the last zero time.
-    if (tx) {
-        state.lastZero[uid] = new Date().getTime();
-        state.balances[uid] = 0;
-    }
-}
-
 // settle/combine payments for minimal net BTC transactions from the lotion app state.
 function payoutTask() {
     console.log('running payoutTask');
@@ -119,63 +108,8 @@ function payoutTask() {
                 shouldSettle = true;
             }
             if (state.balances[uid] > 0 && shouldSettle) {
-                clearBalance(uid, state);
+                helper.clearBalance(uid, state);
             }
         })
     });
-}
-
-/*
- * Changes the balance of UID by DELTA. DELTA may be negative
- */
-function deltaBalance(state, uid, delta) {
-    state.balances[uid] = state.balances[uid] + delta
-}
-
-/*
- Perform a microtransaction from wallet of UIDPAYER to wallet of
- UIDRECEIVER for the amount of bitcoin VAL. Return true if successful
- */
-function  microTransact(state, uidPayer, uidReceiver, val) {
-    absVal = Math.abs(val)
-    if (checkBalance(state, uidPayer, absVal)) {
-        deltaBalance(state, uidPayer, -1 * absVal)
-        deltaBalance(state, uidReceiver, absVal)
-        return true
-    }
-    return false
-}
-
-/*
- Checks the balance to make sure that the wallet of UID has at least
- VAL bitcoin
- */
-function checkBalance(state, uid, val) {
-    if (state.balances[uid] && state.balances[uid] >= Math.abs(val)) {
-        return true
-    }
-    return false
-}
-
-/*
- If UID does not exist, adds it to the wallet. Otherwise, adds VAL to the balance of UID
- */
-function loadBalance(state, uid, val) {
-    if (state.balances[uid]) {
-        deltaBalance(state, uid, val)
-    } else {
-        state.balances[uid] = val
-    }
-}
-
-/*
- Performs a transaction on the bitcoin blockchain to payout to UID for
- VAL
- */
-function payout(state, uid, val) {
-    if (checkBalance(state, uid, val)) {
-        deltaBalance(state, uid, val)
-    } else {
-        console.log("Not enough funds")
-    }
 }
