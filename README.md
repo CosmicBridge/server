@@ -7,17 +7,15 @@ For architectural overview, see here: https://docs.google.com/presentation/d/1-8
 
 The Cosmic Bridge server node both serves as a validator/facilitator of transactions and a repository of funds.
 
-In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address - a specific wallet on the Bitcoin blockchain. Once bitcoin has been received, users can batch bitcoin transactions off-chain using Lotion.js which will be paid out at a regular operating frequency.
+In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address - a specific wallet on the Bitcoin blockchain. Once bitcoin has been received, users can batch bitcoin transactions off-chain using Lotion.js which is paid out while optimizing the number of required transactions.
 
-For example, an operating frequency of one week means the following:
-
-* The server node will accumulate transactions of its participants over the course of the week. 
-* These transactions will be posted/validated by the cosmos distributed network, bundled, and paid out at the end of each week interval.
+* The server node will accumulate transactions of its participants.
+* These transactions will be posted/validated by the cosmos distributed network, bundled, and can be paid out on demand.
 * Users save transaction fees by bundling up transactions on the bitcoin network.
 
 ### Potential Uses
 
-Cosmic Bridge can be used for any application that requires cheap, fast and auditable settlement of Bitcoin transactions, assuming periodical on-Bitcoin-chain settlement is acceptable. Payment Zones can be free for anyone to join, or limited to certain parties. Some potential applications:
+Cosmic Bridge can be used for any application that requires cheap, fast and auditable settlement of Bitcoin transactions, assuming on-demand Bitcoin-chain settlement is acceptable. Payment Zones can be free for anyone to join, or limited to certain parties. In theory, the longer users maintain and use the balances on the cosmos bridge network, the more optimizations can be done in terms of payment merging. Some potential applications:
 
 * Bitcoin micropayments
 * Dark pools of BTC liquidity between exchanges or large traders
@@ -72,4 +70,5 @@ Powered by:<br/>
 ### Useful Links
 
 * https://lotionjs.com/
+* http://bcoin.io/guides/multisig-tx.html
 
