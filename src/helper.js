@@ -101,7 +101,6 @@ const library = (function () {
      */
     function hasSufficientBalance(state, uid, val) {
         return (state.balances[uid] && state.balances[uid] >= Math.abs(val));
-
     }
 
     /*
@@ -142,6 +141,7 @@ const library = (function () {
     return {
         payout: payout,
         clearBalance: clearBalance,
+        deltaBalance: deltaBalance,
         loadBalance: loadBalance,
         hasSufficientBalance: hasSufficientBalance,
         microTransact: microTransact,

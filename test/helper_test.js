@@ -2,8 +2,6 @@ const assert = require('assert');
 const helper = require('../src/helper');
 const test = require('tape-promise/tape');
 
-// TODO: Add tests for helper.js helper library.
-
 let state;
 
 test('setup', async t => {
@@ -23,3 +21,20 @@ test('hasSufficientBalanceTrue', t => {
     assert.ok(helper.hasSufficientBalance(state, 'X', 100));
     t.end()
 });
+
+test('deltaBalanceWithNegative', t => {
+    state.balances['X'] = 100;
+    helper.deltaBalance(state, 'X', -100);
+    assert.equal(state.balances['X'], 0);
+    t.end()
+});
+
+test('deltaBalanceWithPositive', t => {
+    state.balances['X'] = 100;
+    assert.ok(helper.deltaBalance(state, 'X', 100));
+    assert.equal(state.balances['X'], 200);
+    t.end()
+});
+
+// TODO: Add other tests for helper.js helper library.
+
