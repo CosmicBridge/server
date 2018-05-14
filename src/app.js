@@ -15,6 +15,8 @@ rule.dayOfWeek = [0];
 rule.hour = 17;
 rule.minute = 0;
 
+const INTERVAL_MS = 1000 * 60 * 60 * 24 * 7; // one week in ms.
+
 let payoutJob;
 
 /*
@@ -49,10 +51,9 @@ let app = lotion({
     initialState: {
         wallet: {},
         // Accounts keeps track of credited balances for users based on BTC they have sent to the master address.
-        balances: {},// map of bridgeAddress: {bitcoinAddress: ..., credit: ...}
-        // These are the payments that will be settled (cleared) at the end of the next payment period.
-        payments: [], // list of {amount: ..., receiverAddress: ..., senderAddress: ...}
-        networkfee: 0.001 // Currently a constant
+        balances: {},// map of bridgeAddress: {bitcoinAddress: ..., credit: ...}. This gets settled each week.
+        lastZero: {}, // map of last time the account was zeroed (should be at least one week). uid -> timestamp.
+        networkfee: 0.001, // Currently a constant
     },
     devMode: true
 });
@@ -85,31 +86,42 @@ app.listen(PORT).then(({GCI}) => {
     console.log('CosmosBridge app running on port:', PORT);
     // App identifier.
     console.log('GCI:', GCI);
-    //payoutJob = schedule.scheduleJob(rule, payoutTask);
+    payoutJob = schedule.scheduleJob(rule, payoutTask);
 });
 
 function getState() {
     return axios.get(`${BASE_URL}:${PORT}/state`).then(res => res.data)
 }
 
+async function clearBalance(uid, state) {
+    const balance = state.balance[uid];
+    const tx = await bridge.creditBitcoinToReceiver(balance, 500);
+    // once the balance has been delivered, clear the owed balance and update the last zero time.
+    if (tx) {
+        state.lastZero[uid] = new Date().getTime();
+        state.balances[uid] = 0;
+    }
+}
+
 // settle/combine payments for minimal net BTC transactions from the lotion app state.
 function payoutTask() {
     console.log('running payoutTask');
     getState().then((state) => {
-        console.log('current state', state);
-        const paymentMap = bridge.groupPayments(state.payments);
-        const receivers = Object.keys(paymentMap);
-        receivers.map((receiverAddress) => {
-            // Distribute best-aggregated credits to users.
-            // TODO: Once credit successful, remove from payments app state.
-            (async () => {
-                const tx = await bridge.creditBitcoinToReceiver(paymentMap[receiverAddress], receiverAddress, 500);
-                if (tx) {
-                    // TODO: thread safe?
-                    delete paymentMap[receiverAddress];
-                }
-            })();
-        });
+        const uids = Object.keys(state.balances);
+
+        uids.map((uid) => {
+            let shouldSettle;
+            if (state.lastZero.hasOwnProperty(uid)) {
+                const now = new Date().getTime();
+                // settle the balance if it's been non-zero longer than INTERVAL_MS
+                shouldSettle = (now - state.lastZero[uid]) > INTERVAL_MS;
+            } else {
+                shouldSettle = true;
+            }
+            if (state.balances[uid] > 0 && shouldSettle) {
+                clearBalance(uid, state);
+            }
+        })
     });
 }
 
@@ -124,7 +136,7 @@ function deltaBalance(state, uid, delta) {
  Perform a microtransaction from wallet of UIDPAYER to wallet of
  UIDRECEIVER for the amount of bitcoin VAL. Return true if successful
  */
-function microTransact(state, uidPayer, uidReceiver, val) {
+function  microTransact(state, uidPayer, uidReceiver, val) {
     absVal = Math.abs(val)
     if (checkBalance(state, uidPayer, absVal)) {
         deltaBalance(state, uidPayer, -1 * absVal)
