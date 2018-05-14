@@ -20,6 +20,12 @@ Cosmic Bridge can be used for any application that requires cheap, fast and audi
 * Bitcoin micropayments
 * Dark pools of BTC liquidity between exchanges or large traders
 * A merchant network supporting free bitcoin payments for participating merchants
+ 
+### How it works:
+* Create a new multisig wallet that will be used as the master address.
+* Advertise the master address for users to contribute bitcoin to.
+* Users can "credit" other users by invoking app transaction methods which will adjust the participant's balance on the app `state.balance` dictionary.
+* Users can withdraw their balance at any time, at which point the app will optimize required payment settlements in order to pay out the user.
 
 ### Setup:
 
@@ -52,7 +58,7 @@ To check the balance of ADDRESS1, just do:
   `curl http://localhost:PORT/state`
   
   Which returns a JSON dictionary, and then use the key 'balances' and then key 'ADDRESS1' to get the balance for ADDRESS1
-
+ 
 ### Dev Notes
 
 Configuration files are loaded from the `/config` sub-directory. The file `default.json` contains development configuration values, while `production.json` contains production configuration values.
