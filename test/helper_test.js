@@ -7,7 +7,6 @@ let state;
 function reset() {
     state = {};
     state.balances = {};
-    state.lastZero = {};
 }
 
 test('hasSufficientBalanceFalse', t => {
