@@ -97,12 +97,17 @@ const library = (function () {
 
     /*
      If UID does not exist, adds it to the wallet. Otherwise, adds VAL to the balance of UID
+     If VAL is negative and UID does not yet exist, credit 0 balance
      */
     function addBalance(state, uid, val) {
         if (state.balances[uid]) {
             state.balances[uid] = state.balances[uid] + val
         } else {
-            state.balances[uid] = val
+            if (val < 0) {
+                state.balances[uid] = 0
+            } else {
+                state.balances[uid] = val
+            }
         }
     }
 
@@ -112,9 +117,9 @@ const library = (function () {
      */
     function payout(state, uid, val) {
         if (hasSufficientBalance(state, uid, val)) {
-            addBalance(state, uid, val)
+            addBalance(state, uid, -1*val)
         } else {
-            console.error("Not enough funds", JSON.stringify(state), uid, val);
+            //console.error("Not enough funds", JSON.stringify(state), uid, val);
             throw 'Not enough funds';
         }
     }
