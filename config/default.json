@@ -1,4 +1,5 @@
 {
-  "httpPort": 8080,
-  "bitcoinWalletAddress": "3CDRf3UAsEAXvL4i61XgcQmPyWan5paSyT"
+  "externalApiPort": 8080,
+  "lotionPort": 3000,
+  "isDevelopmentMode": "true"
 }
