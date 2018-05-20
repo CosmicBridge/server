@@ -1,12 +1,11 @@
+
+'use strict';
+
 const axios = require('axios');
 const lotion = require('lotion');
 const schedule = require('node-schedule');
 
 const helper = require('./helper');
-
-const BASE_URL = process.env.COSMOS_BRIDGE_URL || 'http://localhost';
-const PORT = process.env.COSMOS_BRIDGE_PORT || 3000;
-
 
 /*
  To load a balance of 3 satoshis onto ADDRESS1, just do:
@@ -44,8 +43,8 @@ let app = lotion({
     devMode: true
 });
 
-function getState() {
-    return axios.get(`${BASE_URL}:${PORT}/state`).then(res => res.data)
+function getState(port) {
+    return axios.get(`http://localhost:${port}/state`).then(res => res.data)
 }
 
 app.use((state, tx) => {
@@ -72,9 +71,12 @@ app.use((state, tx) => {
     }
 });
 
-app.listen(PORT).then(({GCI}) => {
-    console.log('CosmosBridge app running on port:', PORT);
-    // App identifier.
-    console.log('GCI:', GCI);
-});
+function startBlockchainNode(port) {
+  app.listen(port).then(({GCI}) => {
+      console.log('Cosmic Bridge lotion HTTP API listening on port:', port);
+      // App identifier.
+      console.log('GCI:', GCI);
+  });
+}
 
+module.exports = { startBlockchainNode, getState };

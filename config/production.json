@@ -1,3 +1,4 @@
 {
-  "httpPort": 80
+  "externalApiPort": 80,
+  "lotionPort": 3000
 }
