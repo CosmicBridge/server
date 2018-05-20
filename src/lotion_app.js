@@ -5,7 +5,12 @@ const axios = require('axios');
 const lotion = require('lotion');
 const schedule = require('node-schedule');
 
+const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
+
 const helper = require('./helper');
+
+// Development mode
+var IS_DEV_MODE = false;
 
 /*
  To load a balance of 3 satoshis onto ADDRESS1, just do:
@@ -15,9 +20,12 @@ const helper = require('./helper');
  curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":-3.0}'
 
  To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
- curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0}'
+ curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0,"proofOfOwnership":"none"}'
  or
- curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":-2.0}'
+ curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":-2.0,"proofOfOwnership":"none"}'
+
+ Of coures, 'none' as proofOfOwnership will only work in development.
+ In production, put in the TXID of the Bitcoin deposit transaction, signed with the originating address' private key.
 
  To check the balance of ADDRESS1, just do:
  curl http://localhost:PORT/state
@@ -60,18 +68,39 @@ app.use((state, tx) => {
             console.log('This is a fake POST call')
             // TODO: block fake post calls to prevent server slowdown
         }
-    } else if (typeof tx.fromAddress === 'string' && typeof tx.toAddress === 'string' && typeof tx.val === 'number') {
+    } else if (typeof tx.fromAddress === 'string' && typeof tx.toAddress === 'string' && typeof tx.val === 'number' && typeof tx.proofOfOwnership === 'string') {
         console.log(`Payment order received for an amount of ${tx.val} satoshis from ${tx.fromAddress} to ${tx.toAddress}.`);
-        // TODO: Validate proof of ownership of the address on behalf of the sender - should be in the payload. Also must be sent over HTTPS
-        if (helper.microTransact(state, tx.fromAddress, tx.toAddress, tx.val)) {
-            console.log('Success')
-        } else {
-            console.log("Failed, not enough balance or invalid address given")
+
+        // Validate proof of ownership of the address on behalf of the sender
+        let isValid;
+        if (IS_DEV_MODE) {
+          console.log("Development mode - skipping verification of ownership.");
+          isValid = true;
+        }
+        else {
+          let bitcoinDepositTxId = "TODO"; // TODO - we need to have the bitcoin transaction ID of the claimed deposit, depends on bcoin integration
+          try {
+            isValid = secp256k1.verify(Buffer.from(bitcoinDepositTxId), Buffer.from(tx.proofOfOwnership), tx.fromAddress);
+          }
+          catch (error) {
+            console.log('Verification of proof-of-ownership failed with an exception', error.message);
+            isValid = false;
+          }
+          console.log("Cryptographic proof for ownership of bitcoin required: The bitcoin deposit TXID. Verification ", isValid ? "succeeded!" : "FAILED");
+        }
+
+        if (isValid) {
+          if (helper.microTransact(state, tx.fromAddress, tx.toAddress, tx.val)) {
+              console.log('Success')
+          } else {
+              console.log("Failed, not enough balance or invalid address given")
+          }
         }
     }
 });
 
-function startBlockchainNode(port) {
+function startBlockchainNode(port, isDevMode) {
+  IS_DEV_MODE = isDevMode;
   app.listen(port).then(({GCI}) => {
       console.log('Cosmic Bridge lotion HTTP API listening on port:', port);
       // App identifier.
