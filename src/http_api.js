@@ -59,6 +59,10 @@ app.post('/pay/:fromAddress/:toAddress/:amount', function(req, res) {
     if (didTransact) {
       const response = {'from': from, 'to': to, 'amount': amountBTC};
       res.json(response);
+    } else {
+      const errorMessage = `Insufficient cosmosbridge balance to complete transaction. Please send additional BTC to ${helper.MASTER_ADDRESS}`;
+      const response = {'from': from, 'error': errorMessage}
+      res.json(response);
     }
   });
 });
