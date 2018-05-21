@@ -1,6 +1,7 @@
 'use strict';
 /*
- * Script to create a multisig address for use with the cosmosbridge application.
+ * Script to create a mulhttp://bcoin.io/guides/multisig-tx.htmltisig address for use with the cosmosbridge application.
+ * 2-of-2: Smart contracts building block such as tumblebit, coinswap and Lightning Network.
  */
 
 const fs = require('fs');

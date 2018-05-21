@@ -1,39 +1,106 @@
 const library = (function () {
 
     const MASTER_ADDRESS = process.env.COSMOS_BRIDGE_MASTER_ADDRESS;
-    // const MAIN_NET = 8332;
-    // const TEST_NET = 18332;
 
-    // const {WalletClient} = require('bclient');
-    // const {Network} = require('bcoin');
-    // const network = Network.get('testnet');
+    const fs = require('fs');
+    const assert = require('assert');
+    const bcoin = require('bcoin');
+    const KeyRing = bcoin.wallet.WalletKey;
+    const Script = bcoin.Script;
+    const MTX = bcoin.MTX;
+    const Amount = bcoin.Amount;
+    const Coin = bcoin.Coin;
 
-    // const walletClient = new WalletClient({
-    //     port: network.walletPort,
-    //     network: network.type
-    // });
-    //
-    // const id = 'primary'; // or whatever the master wallet name is.
-    // const masterWallet = walletClient.wallet(id);
+    const network = 'regtest';
 
+
+    // grab private keys
+    const secret1 = fs.readFileSync('./multisig/regtest-key1.wif').toString();
+    const secret2 = fs.readFileSync('./multisig/regtest-key2.wif').toString();
+
+    // generate keyring object (pubkeys too)
+    const ring1 = KeyRing.fromSecret(secret1);
+    const ring2 = KeyRing.fromSecret(secret2);
+
+    const m = 2;
+    const n = 2;
+    
     /*
      * Use BTC balance from the master account to credit owed BTC amount to the receiver.
-     * address="moTyiK7aExe2v3hFJ9BCsYooTziX15PGuA"
-     * rate for transaction (ex: 500).
+     * amount: Amount in BTC provided as string, e.g. '100'
+     * receiverAddress: address of receiver"moTyiK7aExe2v3hFJ9BCsYooTziX15PGuA" or 'RF1PJ1VkHG6H9dwoE2k19a5aigWcWr6Lsu';
+     * previousTxHash: Hash of the previously credited BTC to the master address to be used in this transaction.
+     * rate for transaction (ex: 500). // TODO: use dynamic rate evaluation.
+     * 
      */
-    async function creditBitcoinToReceiver(amount, receiverAddress, rate) {
-        console.log(`crediting ${amount} BTC to ${receiverAddress}`);
-        const options = {
-            rate: rate,
-            outputs: [{value: amount, address: address}]
+    async function creditBitcoinToReceiver(amount, receiverAddress, rate, previousTxHash) {
+        console.log(`crediting ${amount} BTC to ${receiverAddress} at ${rate} rate.`);
+        const pubkey1 = ring1.publicKey;
+        const pubkey2 = ring2.publicKey;
+
+        // the redeem
+        const redeem = Script.fromMultisig(m, n, [pubkey1, pubkey2]);
+        // p2sh script
+        const script = Script.fromScripthash(redeem.hash160());
+        // Send change from transaction back to master address.
+        const changeAddr = script.getAddress().toBase58(network);
+
+        // Previous tx info 
+        const sendTo = receiverAddress; 
+        const txInfo = {
+            value: Amount.fromBTC(amount).toValue(),
+            // Previous transaction hash.
+            hash: previousTxHash,
+            index: 0
         };
 
-        // const tx = await masterWallet.send(options);
-        const tx = null;
-        console.log(tx);
-        return tx;
+        // Coin provides information for the transaction that is aggregated in CoinView within the mtx.
+        // Contains information about the previous output.
+        const coin = Coin.fromJSON({
+            version: 1,
+            height: -1,
+            value: txInfo.value,
+            coinbase: false,
+
+            script: script.toJSON(),
+            hash: txInfo.hash,
+            index: txInfo.index
+        });
+
+        // Now we create mutable transaction object
+        const spend1 = new MTX();
+        ring1.script = redeem;
+
+        // send
+        spend1.addOutput({
+            address: sendTo,
+            value: Amount.fromBTC(amount).toValue()
+        });
+
+        // this will automatically select coins and
+        // send change back to our address
+        await spend1.fund([coin], {
+            rate: rate,
+            changeAddress: changeAddr
+        });
+
+        spend1.scriptInput(0, coin, ring1);
+        spend1.signInput(0, coin, ring1);
+        const raw = spend1.toRaw();
+
+        const spend2 = MTX.fromRaw(raw);
+        spend2.script = redeem;
+        spend2.view.addCoin(coin);
+        spend2.signInput(0, coin, ring2);
+
+        // Both users signed, transaction should be complete.
+        // Let's make sure that the transaction is valid
+        assert(spend2.verify(), 'Transaction isnt valid.');
+        console.log(spend2.toRaw().toString('hex'));
     }
 
+    // groupPayments: Minimize the number of net payments between parties by taking a list of transactions
+    // and merging them such that the net number of transactions to achieve the final transaction state is minimized.
     // @param payments list of {amount: ..., receiverAddress: ..., senderAddress: ...}
     // @return paymentMap map of the form:
     // {
@@ -44,7 +111,6 @@ const library = (function () {
     //      },
     //      ...
     // }
-    // Used to minimize the number of net payments between parties.
     function groupPayments(payments) {
         const paymentMap = {};
         payments.map((payment) => {
