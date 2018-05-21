@@ -50,7 +50,7 @@ let app = lotion({
     devMode: true
 });
 
-function getState(port) {
+async function getState(port) {
     return axios.get(`http://localhost:${port}/state`).then(res => res.data)
 }
 
@@ -98,7 +98,7 @@ app.use((state, tx) => {
     }
 });
 
-function startBlockchainNode(port, isDevMode) {
+async function startBlockchainNode(port, isDevMode) {
   IS_DEV_MODE = isDevMode;
   app.listen(port).then(({GCI}) => {
       console.log('Cosmic Bridge lotion HTTP API listening on port:', port);

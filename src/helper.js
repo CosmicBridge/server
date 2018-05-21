@@ -2,6 +2,8 @@ const library = (function () {
 
     const MASTER_ADDRESS = process.env.COSMOS_BRIDGE_MASTER_ADDRESS;
 
+    const BTC_PER_SATOSHI = 0.00000001;
+
     const fs = require('fs');
     const assert = require('assert');
     const bcoin = require('bcoin');
@@ -24,7 +26,7 @@ const library = (function () {
 
     const m = 2;
     const n = 2;
-    
+
     /*
      * Use BTC balance from the master account to credit owed BTC amount to the receiver.
      * amount: Amount in BTC provided as string, e.g. '100'
@@ -161,6 +163,13 @@ const library = (function () {
         return (state.balances[uid] && state.balances[uid] >= Math.abs(val));
     }
 
+    function getBalance(state, uid) {
+        if (state.balances.hasOwnProperty(uid)) {
+            return state.balances[uid];
+        }
+        return 0;
+    }
+
     /*
      If UID does not exist, adds it to the wallet. Otherwise, adds VAL to the balance of UID
      If VAL is negative and UID does not yet exist, credit 0 balance
@@ -206,10 +215,12 @@ const library = (function () {
         payout: payout,
         payoutBalance: payoutBalance,
         addBalance: addBalance,
+        getBalance: getBalance,
         hasSufficientBalance: hasSufficientBalance,
         microTransact: microTransact,
         groupPayments: groupPayments,
         creditBitcoinToReceiver: creditBitcoinToReceiver,
+        BTC_PER_SATOSHI: BTC_PER_SATOSHI,
         MASTER_ADDRESS: MASTER_ADDRESS
     };
 
