@@ -1,14 +1,14 @@
 Arguments: 
-  /usr/local/Cellar/node/6.2.2/bin/node /usr/local/bin/yarn
+  /usr/local/bin/node /usr/local/bin/yarn install
 
 PATH: 
   /Library/Frameworks/Python.framework/Versions/3.5/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/usr/local/git/bin:/Library/Frameworks/Python.framework/Versions/3.5/bin:/usr/local/opt/go/libexec/bin:/usr/local/Cellar/node/6.2.2/bin:/Users/cbono/bin:/usr/local/spark/bin:/Users/cbono/Library/Android/sdk/platform-tools/:/usr/local/opt/go/libexec/bin:/usr/local/Cellar/node/6.2.2/bin:/Users/cbono/bin:/usr/local/spark/bin:/Users/cbono/Library/Android/sdk/platform-tools/
 
 Yarn version: 
-  0.17.4
+  0.17.10
 
 Node version: 
-  6.2.2
+  10.0.0
 
 Platform: 
   darwin x64
@@ -24,13 +24,13 @@ Lockfile:
 
 Trace: 
   Error: EACCES: permission denied, open '/Users/cbono/Library/Caches/Yarn/.roadrunner.json'
-      at Error (native)
-      at Object.fs.openSync (fs.js:634:18)
-      at Object.fs.writeFileSync (fs.js:1327:33)
+      at Object.fs.openSync (fs.js:545:3)
+      at Object.fs.writeFileSync (fs.js:1275:33)
       at /usr/local/lib/node_modules/yarn/node_modules/roadrunner/index.js:25:6
       at /usr/local/lib/node_modules/yarn/node_modules/roadrunner/index.js:12:12
-      at emitOne (events.js:101:20)
-      at process.emit (events.js:188:7)
-      at processEmit [as emit] (/usr/local/lib/node_modules/yarn/node_modules/signal-exit/index.js:140:35)
-      at process.exit (internal/process.js:146:15)
+      at process.emit (events.js:187:15)
+      at processEmit [as emit] (/usr/local/lib/node_modules/yarn/node_modules/signal-exit/index.js:149:35)
+      at process.exit (internal/process.js:164:15)
       at exit (/usr/local/lib/node_modules/yarn/lib/cli/index.js:392:13)
+      at run (/usr/local/lib/node_modules/yarn/node_modules/core-js/library/modules/es6.promise.js:75:22)
+      at /usr/local/lib/node_modules/yarn/node_modules/core-js/library/modules/es6.promise.js:92:30

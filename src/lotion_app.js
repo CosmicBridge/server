@@ -3,7 +3,6 @@
 
 const axios = require('axios');
 const lotion = require('lotion');
-const schedule = require('node-schedule');
 
 const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
 
