@@ -1,6 +1,14 @@
 const assert = require('assert');
+
+function mockFunctions() {
+    const original = require.requireActual('../src/helper');
+    return {
+      ...original, //Pass down all the exported objects
+      creditBitcoinToReceiver: jest.fn(() => {console.log('I didnt call the original')}),
+    }
+}
+jest.mock('../src/helper', () => mockFunctions());
 const helper = require('../src/helper');
-const test = require('tape-promise/tape');
 
 let state;
 
@@ -11,51 +19,45 @@ function reset() {
     state.networkfee = .001;
 }
 
-test('hasSufficientBalanceFalse', t => {
-    reset()
+beforeEach(() => {
+    reset();
+});
+
+it('hasSufficientBalanceFalse', () => {
+    
     state.balances['X'] = 100;
     assert.ok(!helper.hasSufficientBalance(state, 'X', 100.01));
-    t.end()
-
 });
 
-test('hasSufficientBalanceTrue', t => {
-    reset()
+it('hasSufficientBalanceTrue', () => {
+    
     state.balances['X'] = 100;
     assert.ok(helper.hasSufficientBalance(state, 'X', 100));
-    t.end()
-
 });
 
-test('addBalanceWithNegativeStarting0', t => {
-    reset()
+it('addBalanceWithNegativeStarting0', () => {
+    
     state.balances['X'] = 0;
     helper.addBalance(state, 'X', -100);
     assert.equal(state.balances['X'], 0);
-    t.end()
-
 });
 
-test('addBalanceWithNegative', t => {
-    reset()
+it('addBalanceWithNegative', () => {
+    
     state.balances['X'] = 100;
     helper.addBalance(state, 'X', -100);
     assert.equal(state.balances['X'], 0);
-    t.end()
-
 });
 
-test('addBalanceWithPositive', t => {
-    reset()
+it('addBalanceWithPositive', () => {
+    
     state.balances['X'] = 100;
     helper.addBalance(state, 'X', 100);
     assert.equal(state.balances['X'], 200);
-    t.end()
-
 });
 
-test('addMultipleBalancesWithPositive', t => {
-    reset()
+it('addMultipleBalancesWithPositive', () => {
+    
     state.balances['X'] = 100;
     state.balances['Y'] = 200;
     state.balances['Z'] = 300;
@@ -65,99 +67,68 @@ test('addMultipleBalancesWithPositive', t => {
     assert.equal(state.balances['X'], 200);
     assert.equal(state.balances['Y'], 400);
     assert.equal(state.balances['Z'], 600);
-    t.end()
-
 });
 
-test('addBalanceInitial', t => {
-    reset()
+it('addBalanceInitial', () => {
+    
     helper.addBalance(state, 'X', 100);
     assert.equal(state.balances['X'], 100);
-    t.end()
 });
 
-test('addMultipleBalancesInitial', t => {
-    reset()
+it('addMultipleBalancesInitial', () => {
+    
     helper.addBalance(state, 'X', 100);
     assert.equal(state.balances['X'], 100);
     helper.addBalance(state, 'Y', 200);
     assert.equal(state.balances['Y'], 200);
     helper.addBalance(state, 'Z', 300);
     assert.equal(state.balances['Z'], 300);
-    t.end()
 });
 
-test('payoutInsufficientFundsSmall', t => {
-    reset()
-    state.balances['X'] = 100;
-    assert.throws( function() {helper.payout(state, 'X', 100.001); })
-    assert.equal(state.balances['X', 100]);
-    t.end()
-
-});
-
-test('payoutInsufficientFundsLarge', t => {
-    reset()
-    state.balances['X'] = 100;
-    assert.throws( function() {helper.payout(state, 'X', 1000.001); })
-    assert.equal(state.balances['X', 100]);
-    t.end()
-
-});
-
-
-test('payoutSufficientFunds', t => {
-    reset()
-    state.balances['X'] = 100;
-    helper.payout(state, 'X', 100);
-    assert.equal(state.balances['X'], 0);
-    t.end()
-
-});
-
-test('microtransactTrue', t => {
-    reset()
+it('microtransactTrue', () => {
+    
     state.balances['X'] = 100;
     state.balances['Y'] = 100;
     helper.microTransact(state, 'X', 'Y', 100)
     assert.equal(state.balances['Y'], 200);
     assert.equal(state.balances['X'], 0);
-    t.end()
-
 });
 
-test('microtransactFalse', t => {
-    reset()
+it('microtransactFalse', () => {
+    
     state.balances['X'] = 0;
     state.balances['Y'] = 100;
-    helper.microTransact(state, 'X', 'Y', 100)
+    helper.microTransact(state, 'X', 'Y', 100);
     assert.equal(state.balances['Y'], 100);
     assert.equal(state.balances['X'], 0);
-    t.end()
-
 });
 
-test('microtransactNegTrue', t => {
-    reset()
+it('microtransactNegTrue', () => {
+    
     state.balances['X'] = 100;
     state.balances['Y'] = 100;
     helper.microTransact(state, 'X', 'Y', -100)
     assert.equal(state.balances['Y'], 200);
     assert.equal(state.balances['X'], 0);
-    t.end()
-
 });
 
-test('microtransactNegFalse', t => {
-    reset()
+it('microtransactNegFalse', () => {
+    
     state.balances['X'] = 0;
     state.balances['Y'] = 100;
     helper.microTransact(state, 'X', 'Y', -100)
     assert.equal(state.balances['Y'], 100);
     assert.equal(state.balances['X'], 0);
-    t.end()
-
 });
 
-// TODO: Add other tests for helper.js helper library.
+it('getBalance', () => {
+    
+    state.balances['X'] = 100;
+    assert.equal(helper.getBalance(state, 'X'), 100);
+});
+
+it('getBalanceNoAccount', () => {
+    
+    assert.equal(helper.getBalance(state, 'X'), 0);
+});
 

@@ -28,7 +28,6 @@ app.get('/balance/:address', function(req, res) {
   console.log(`Requested to check the balance of ${address}.`);
 
   (async () => {
-    // TODO: handle error case in getting state.
     const state = lotionApp.getState();
     const balance = helper.getBalance(state, address);
     const response = {'address': address, 'balance': balance};
@@ -36,17 +35,29 @@ app.get('/balance/:address', function(req, res) {
   });
 });
 
+app.post('/withdraw', function(req, res) {
+  const body = req.body;
+  const address = body.address;
+  const amount = parseFloat(body.amount);
+
+
+  (async () => {
+    // TODO: handle error case in getting state.
+    const state = lotionApp.getState();
+    
+
+
+
 // Perform a payment in the payment zone (aka in the Cosmos chain)
 // To call via curl, use curl -d to make the call a POST call. E.g.:
-// curl -d '' localhost:8080/pay/FROM/TO/504
-app.post('/pay/:fromAddress/:toAddress/:amount', function(req, res) {
-  const from = req.params.fromAddress;
-  const to = req.params.toAddress;
-  const amount = req.params.amount;
-  const amountBTC = amount * helper.BTC_PER_SATOSHI;
+// curl -d '' localhost:8080/pay
+app.post('/pay', function(req, res) {
   const body = req.body;
-  // TODO: fetch private vars from body.
+  const from = body.fromAddress;
+  const to = body.toAddress;
+  const amount = parseFloat(body.amount);
 
+  const amountBTC = amount * helper.BTC_PER_SATOSHI;
   console.log(`Payment order received for an amount of ${amountBTC} BTC from ${from} to ${to}.`);
 
   (async () => {
@@ -66,8 +77,8 @@ app.post('/pay/:fromAddress/:toAddress/:amount', function(req, res) {
 });
 
 function startHttpServer(port) {
-  console.log(`Cosmic Bridge HTTP API server listening on port ${port}`);
   app.listen(port);
+  console.log(`Cosmic Bridge HTTP API server listening on port ${port}`);
 }
 
 module.exports = { startHttpServer };

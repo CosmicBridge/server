@@ -14,19 +14,6 @@ const library = (function () {
     const Coin = bcoin.Coin;
 
     const network = 'regtest';
-
-
-    // grab private keys
-    const secret1 = fs.readFileSync('./multisig/regtest-key1.wif').toString();
-    const secret2 = fs.readFileSync('./multisig/regtest-key2.wif').toString();
-
-    // generate keyring object (pubkeys too)
-    const ring1 = KeyRing.fromSecret(secret1);
-    const ring2 = KeyRing.fromSecret(secret2);
-
-    const m = 2;
-    const n = 2;
-
     /*
      * Use BTC balance from the master account to credit owed BTC amount to the receiver.
      * amount: Amount in BTC provided as string, e.g. '100'
@@ -36,6 +23,18 @@ const library = (function () {
      * 
      */
     async function creditBitcoinToReceiver(amount, receiverAddress, rate, previousTxHash) {
+        // grab private keys
+        const secret1 = fs.readFileSync('./multisig/regtest-key1.wif').toString();
+        const secret2 = fs.readFileSync('./multisig/regtest-key2.wif').toString();
+
+        // generate keyring object (pubkeys too)
+        const ring1 = KeyRing.fromSecret(secret1);
+        const ring2 = KeyRing.fromSecret(secret2);
+
+        const m = 2;
+        const n = 2;
+
+
         console.log(`crediting ${amount} BTC to ${receiverAddress} at ${rate} rate.`);
         const pubkey1 = ring1.publicKey;
         const pubkey2 = ring2.publicKey;
@@ -98,47 +97,9 @@ const library = (function () {
         // Both users signed, transaction should be complete.
         // Let's make sure that the transaction is valid
         assert(spend2.verify(), 'Transaction isnt valid.');
-        console.log(spend2.toRaw().toString('hex'));
-    }
-
-    // groupPayments: Minimize the number of net payments between parties by taking a list of transactions
-    // and merging them such that the net number of transactions to achieve the final transaction state is minimized.
-    // @param payments list of {amount: ..., receiverAddress: ..., senderAddress: ...}
-    // @return paymentMap map of the form:
-    // {
-    //     receiver1: {
-    //          sender1: X1 BTC,
-    //          ...
-    //          senderN: Xn BTC
-    //      },
-    //      ...
-    // }
-    function groupPayments(payments) {
-        const paymentMap = {};
-        payments.map((payment) => {
-            const amount = payment.amount;
-            const receiverAddress = payment.receiverAddress;
-            const senderAddress = payment.senderAddress;
-            console.log('payment', payment);
-            if (paymentMap.hasOwnProperty(receiverAddress)) {
-                if (!paymentMap[receiverAddress].hasOwnProperty(senderAddress)) {
-                    paymentMap[receiverAddress][senderAddress] = 0;
-                }
-                paymentMap[receiverAddress][senderAddress] += amount
-            } else if (paymentMap.hasOwnProperty(senderAddress)) {
-                // If the sender is already in the map.
-                if (!paymentMap[senderAddress].hasOwnProperty(receiverAddress)) {
-                    paymentMap[senderAddress][receiverAddress] = 0;
-                }
-                paymentMap[senderAddress][receiverAddress] -= amount;
-            } else {
-                // key not present
-                paymentMap[receiverAddress] = {};
-                paymentMap[receiverAddress][senderAddress] = amount;
-            }
-        });
-
-        return paymentMap
+        tx = spend2.toRaw().toString('hex')
+        console.log('tx', tx);
+        return tx;
     }
 
     /*
@@ -160,7 +121,7 @@ const library = (function () {
      VAL bitcoin
      */
     function hasSufficientBalance(state, uid, val) {
-        return (state.balances[uid] && state.balances[uid] >= Math.abs(val));
+        return (state.balances.hasOwnProperty(uid) && state.balances[uid] >= Math.abs(val));
     }
 
     function getBalance(state, uid) {
@@ -175,51 +136,43 @@ const library = (function () {
      If VAL is negative and UID does not yet exist, credit 0 balance
      */
     function addBalance(state, uid, val) {
-        if (state.balances[uid]) {
-            state.balances[uid] = state.balances[uid] + val
-        } else {
-            if (val < 0) {
-                state.balances[uid] = 0
-            } else {
-                state.balances[uid] = val
-            }
-        }
+        if (!state.balances.hasOwnProperty(uid)) {
+            state.balances[uid] = 0;
+        } 
+        state.balances[uid] = Math.max(state.balances[uid] + val, 0);
     }
 
     /*
      Performs a transaction on the bitcoin blockchain to payout to UID for
      VAL
      */
-    function payout(state, uid, val) {
+    async function payout(state, uid, val) {
         if (hasSufficientBalance(state, uid, val)) {
-            addBalance(state, uid, -1*val)
+            const tx = await payoutBitcoinBalance(state, uid, val)
+            return tx;
         } else {
             //console.error("Not enough funds", JSON.stringify(state), uid, val);
-            throw 'Not enough funds';
+            return null;
+            throw 'Not enough funds in address ' + uid;
         }
     }
 
-    async function payoutBalance(uid, state) {
-        const balance = state.balance[uid];
-        const tx = await helper.creditBitcoinToReceiver(balance, 500);
-        // If the balance has been successfully settled using bcoin, clear the owed balance and update the last zero time
-        // for the address/uid.
+    async function payoutBitcoinBalance(state, uid, amount, test) {
+        const amountBTC = amount * BTC_PER_SATOSHI;
+        const tx = await creditBitcoinToReceiver(amountBTC + "", 500);
         if (tx) {
-            state.lastZero[uid] = new Date().getTime();
-            state.balances[uid] = 0;
+            // Update the state if the TX was successful.
+            state.balance[uid] = state.balance[uid] - amount;
         }
         return tx;
     }
 
     return {
         payout: payout,
-        payoutBalance: payoutBalance,
         addBalance: addBalance,
         getBalance: getBalance,
         hasSufficientBalance: hasSufficientBalance,
         microTransact: microTransact,
-        groupPayments: groupPayments,
-        creditBitcoinToReceiver: creditBitcoinToReceiver,
         BTC_PER_SATOSHI: BTC_PER_SATOSHI,
         MASTER_ADDRESS: MASTER_ADDRESS
     };

@@ -44,7 +44,7 @@ let app = lotion({
     initialState: {
         wallet: {},
         // Accounts keeps track of credited balances for users based on BTC they have sent to the master address.
-        balances: {},// map of bridgeAddress: {bitcoinAddress: ..., credit: ...}. This gets settled each week.
+        balances: {}, // map of {bitcoinAddress: ..., credit: Y}.
         networkfee: 0.001, // Currently a constant
     },
     devMode: true
@@ -62,7 +62,7 @@ app.use((state, tx) => {
             helper.addBalance(state, tx.address, tx.val)
         } else if (tx.val < 0) {
             console.log(`Balance paid out for an amount of ${tx.val} satoshis to ${tx.address}.`);
-            helper.payout(state, tx.address, tx.val)
+            helper.payoutBalance(state, tx.address, tx.val)
         } else {
             console.log('This is a fake POST call')
             // TODO: block fake post calls to prevent server slowdown
@@ -98,13 +98,14 @@ app.use((state, tx) => {
     }
 });
 
-async function startBlockchainNode(port, isDevMode) {
+async function startBlockchainApp(port, isDevMode, httpApi) {
   IS_DEV_MODE = isDevMode;
   app.listen(port).then(({GCI}) => {
       console.log('Cosmic Bridge lotion HTTP API listening on port:', port);
       // App identifier.
       console.log('GCI:', GCI);
+      httpApi.startHttpServer(EXTERNAL_API_PORT);
   });
 }
 
-module.exports = { startBlockchainNode, getState };
+module.exports = { startBlockchainApp, getState };

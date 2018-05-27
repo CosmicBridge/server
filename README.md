@@ -66,8 +66,14 @@ Configuration files are loaded from the `/config` sub-directory. The file `defau
 To run the Payment Zone HTTP API server (this will change once Cosmos + HTTP server code are integrated to one module):
 
 <pre>
-npm run start-http
+  npm run start-http
 </pre>
+
+Running tests:
+<pre>
+  yarn test
+</pre>
+
 
 Powered by:<br/>
 <img src="./img/lotion.png" style="width: 300px"/>
