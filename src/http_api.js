@@ -28,7 +28,7 @@ app.get('/balance/:address', function(req, res) {
   console.log(`Requested to check the balance of ${address}.`);
 
   (async () => {
-    const state = lotionApp.getState();
+    const state = await lotionApp.getState();
     const balance = helper.getBalance(state, address);
     const response = {'address': address, 'balance': balance};
     res.json(response);
@@ -41,8 +41,8 @@ app.post('/withdraw', function(req, res) {
   const amount = parseFloat(body.amount);
 
   (async () => {
-    const state = lotionApp.getState();
-    const response = helper.payout(state, address, amount);
+    const state = await lotionApp.getState();
+    const response = await helper.payout(state, address, amount);
     console.log(response)
     res.json({'result': response});
   });
@@ -61,10 +61,9 @@ app.post('/pay', function(req, res) {
   console.log(`Payment order received for an amount of ${amountBTC} BTC from ${from} to ${to}.`);
 
   (async () => {
-    // TODO: handle error case in getting state.
-    const state = lotionApp.getState();
-    // TODO: validate token before performing the microTransact method.
+    const state = await lotionApp.getState();
     const didTransact = helper.microTransact(state, from, to, amountBTC);
+
     if (didTransact) {
       const response = {'from': from, 'to': to, 'amount': amountBTC};
       res.json(response);
