@@ -1,5 +1,6 @@
 {
-  "externalApiPort": 8080,
+  "externalApiPort": 7000,
   "lotionPort": 3000,
-  "isDevelopmentMode": "true"
+  "isDevelopmentMode": "true",
+  "masterAddress": "GfhUCBSLWSDMFszEkmLWiJWxhT569dQKaK"
 }

@@ -2,6 +2,7 @@
 'use strict';
 
 const axios = require('axios');
+const config = require('config');
 const lotion = require('lotion');
 
 const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
@@ -9,7 +10,7 @@ const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
 const helper = require('./helper');
 
 // Development mode
-var IS_DEV_MODE = false;
+const IS_DEV_MODE = config.has('isDevelopmentMode');
 
 /*
  To load a balance of 3 satoshis onto ADDRESS1, just do:
@@ -50,8 +51,8 @@ let app = lotion({
     devMode: true
 });
 
-async function getState(port) {
-    return axios.get(`http://localhost:${port}/state`).then(res => res.data)
+async function getState() {
+    return axios.get(`http://localhost:${config.lotionPort}/state`).then(res => res.data)
 }
 
 app.use((state, tx) => {
@@ -62,7 +63,7 @@ app.use((state, tx) => {
             helper.addBalance(state, tx.address, tx.val)
         } else if (tx.val < 0) {
             console.log(`Balance paid out for an amount of ${tx.val} satoshis to ${tx.address}.`);
-            helper.payoutBalance(state, tx.address, tx.val)
+            helper.payout(state, tx.address, tx.val)
         } else {
             console.log('This is a fake POST call')
             // TODO: block fake post calls to prevent server slowdown
@@ -98,13 +99,12 @@ app.use((state, tx) => {
     }
 });
 
-async function startBlockchainNode(port, apiPort, httpApi, isDevMode) {
-  IS_DEV_MODE = isDevMode;
-  app.listen(port).then(({GCI}) => {
-      console.log('Cosmic Bridge lotion HTTP API listening on port:', port);
+async function startBlockchainNode(httpApi) {
+  app.listen(config.lotionPort).then(({GCI}) => {
+      console.log('Cosmic Bridge lotion HTTP API listening on port:', config.lotionPort);
       // App identifier.
       console.log('GCI:', GCI);
-      httpApi.startHttpServer(apiPort);
+      httpApi.startHttpServer(config.externalApiPort);
   });
 }
 

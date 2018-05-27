@@ -15,43 +15,39 @@ const lotionApp = require('./lotion_app');
 
 const app = express();
 
-// Returns the Bitcoin wallet multisig address associated with this Payment Zone>
-// There is only one such address, and that's the one Bitcoin payments should be sent to 
-app.get('/pz-wallet-address', function(req, res) {
-  const response = {'pz': helper.MASTER_ADDRESS};
+// Returns the Bitcoin wallet multisig master address associated with this Payment Zone.
+// There is only one such address, and that's the one Bitcoin payments should be sent to.
+app.get('/master/address', function (req, res) {
+  const response = { 'master': helper.MASTER_ADDRESS };
   res.send(response);
 });
 
 // Check balance for a bitcoin address this payment zone 
-app.get('/balance/:address', function(req, res) {
+app.get('/balance/:address', async function (req, res) {
   const address = req.params.address;
   console.log(`Requested to check the balance of ${address}.`);
 
-  (async () => {
-    const state = await lotionApp.getState();
-    const balance = helper.getBalance(state, address);
-    const response = {'address': address, 'balance': balance};
-    res.json(response);
-  });
+  const state = await lotionApp.getState();
+  const balance = helper.getBalance(state, address);
+  const response = { 'address': address, 'balance': balance };
+  res.json(response);
 });
 
-app.post('/withdraw', function(req, res) {
+app.post('/withdraw', async function (req, res) {
   const body = req.body;
   const address = body.address;
   const amount = parseFloat(body.amount);
 
-  (async () => {
-    const state = await lotionApp.getState();
-    const response = await helper.payout(state, address, amount);
-    console.log(response)
-    res.json({'result': response});
-  });
+  const state = await lotionApp.getState();
+  const response = await helper.payout(state, address, amount);
+  console.log(response)
+  res.json({ 'result': response });
 });
 
 // Perform a payment in the payment zone (aka in the Cosmos chain)
 // To call via curl, use curl -d to make the call a POST call. E.g.:
-// curl -d '' localhost:8080/pay
-app.post('/pay', function(req, res) {
+// curl -d '' localhost:7000/pay
+app.post('/pay', async function (req, res) {
   const body = req.body;
   const from = body.fromAddress;
   const to = body.toAddress;
@@ -60,19 +56,17 @@ app.post('/pay', function(req, res) {
   const amountBTC = amount * helper.BTC_PER_SATOSHI;
   console.log(`Payment order received for an amount of ${amountBTC} BTC from ${from} to ${to}.`);
 
-  (async () => {
-    const state = await lotionApp.getState();
-    const didTransact = helper.microTransact(state, from, to, amountBTC);
+  const state = await lotionApp.getState();
+  const didTransact = helper.microTransact(state, from, to, amountBTC);
 
-    if (didTransact) {
-      const response = {'from': from, 'to': to, 'amount': amountBTC};
-      res.json(response);
-    } else {
-      const errorMessage = `Insufficient cosmosbridge balance to complete transaction. Please send additional BTC to ${helper.MASTER_ADDRESS}`;
-      const response = {'from': from, 'error': errorMessage}
-      res.json(response);
-    }
-  });
+  if (didTransact) {
+    const response = { 'from': from, 'to': to, 'amount': amountBTC };
+    res.json(response);
+  } else {
+    const errorMessage = `Insufficient cosmosbridge balance to complete transaction. Please send additional BTC to ${helper.MASTER_ADDRESS}`;
+    const response = { 'from': from, 'error': errorMessage }
+    res.json(response);
+  }
 });
 
 function startHttpServer(port) {

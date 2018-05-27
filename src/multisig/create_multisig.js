@@ -34,6 +34,6 @@ const multiSigScript = Script.fromMultisig(m, n, pubKeys);
 const base58addr = multiSigScript.getAddress().toBase58(network);
 
 // Store address
-fs.writeFileSync(`${network}-address`, base58addr);
+fs.writeFileSync(`${network}-master-address.txt`, base58addr);
 // Multisig address
 console.log(`Address: ${base58addr}`);

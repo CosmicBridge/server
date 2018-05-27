@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "node src/main.js"
+    "start": "node src/main.js",
+    "master": "node src/multisig/create_multisig.js"
   },
   "repository": {
     "type": "git",

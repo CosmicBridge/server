@@ -1,6 +1,8 @@
 const library = (function () {
+    const config = require('config'); 
 
-    const MASTER_ADDRESS = process.env.COSMOS_BRIDGE_MASTER_ADDRESS;
+    const MASTER_ADDRESS = config.masterAddress;
+    console.log('Using Master:', MASTER_ADDRESS);
 
     const BTC_PER_SATOSHI = 0.00000001;
 
