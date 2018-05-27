@@ -4,7 +4,8 @@
   "description": "Cosmic Bridge Server Node",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node src/main.js"
   },
   "repository": {
     "type": "git",

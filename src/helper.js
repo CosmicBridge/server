@@ -152,8 +152,7 @@ const library = (function () {
             return tx;
         } else {
             //console.error("Not enough funds", JSON.stringify(state), uid, val);
-            return null;
-            throw 'Not enough funds in address ' + uid;
+            return 'Not enough funds in address ' + uid;
         }
     }
 

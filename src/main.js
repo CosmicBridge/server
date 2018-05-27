@@ -7,4 +7,4 @@ const EXTERNAL_API_PORT = config.get('externalApiPort');
 const LOTION_PORT = process.env.COSMIC_BRIDGE_PORT || config.get('lotionPort');
 const IS_DEV_MODE = config.has('isDevelopmentMode');
 
-lotionApp.startBlockchainNode(LOTION_PORT, IS_DEV_MODE, httpApi);
+lotionApp.startBlockchainNode(LOTION_PORT, EXTERNAL_API_PORT, httpApi, IS_DEV_MODE);

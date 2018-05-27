@@ -40,13 +40,13 @@ app.post('/withdraw', function(req, res) {
   const address = body.address;
   const amount = parseFloat(body.amount);
 
-
   (async () => {
-    // TODO: handle error case in getting state.
     const state = lotionApp.getState();
-    
-
-
+    const response = helper.payout(state, address, amount);
+    console.log(response)
+    res.json({'result': response});
+  });
+});
 
 // Perform a payment in the payment zone (aka in the Cosmos chain)
 // To call via curl, use curl -d to make the call a POST call. E.g.:

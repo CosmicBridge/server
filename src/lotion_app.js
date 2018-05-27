@@ -98,14 +98,14 @@ app.use((state, tx) => {
     }
 });
 
-async function startBlockchainApp(port, isDevMode, httpApi) {
+async function startBlockchainNode(port, apiPort, httpApi, isDevMode) {
   IS_DEV_MODE = isDevMode;
   app.listen(port).then(({GCI}) => {
       console.log('Cosmic Bridge lotion HTTP API listening on port:', port);
       // App identifier.
       console.log('GCI:', GCI);
-      httpApi.startHttpServer(EXTERNAL_API_PORT);
+      httpApi.startHttpServer(apiPort);
   });
 }
 
-module.exports = { startBlockchainApp, getState };
+module.exports = { startBlockchainNode, getState };
