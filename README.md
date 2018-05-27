@@ -1,6 +1,7 @@
 # Cosmic Bridge
 
 [![Dependency Status](https://david-dm.org/CosmicBridge/server.svg)](https://david-dm.org/CosmicBridge/server)
+[![devDependencies Status](https://david-dm.org/CosmicBridge/server/dev-status.svg)](https://david-dm.org/CosmicBridge/server?type=dev)
 
 Server node for the Cosmic Bridge application. Manages tracking payments/balance on the Cosmos chain and bundled scheduled payouts on the Bitcoin mainnet.
 
