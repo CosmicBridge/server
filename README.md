@@ -28,7 +28,7 @@ Cosmic Bridge can be used for any application that requires cheap, fast and audi
 ### How it works:
 * Create a new multisig wallet that will be used as the master address.
 * Advertise the master address for users to contribute bitcoin to.
-* Users can "credit" other users by invoking app transaction methods which will adjust the participant's balance on the app `state.balance` dictionary.
+* Users can "credit" other users by invoking app transaction methods which will adjust the participant's balance on the app `state.balances` dictionary.
 * Users can withdraw their balance at any time, at which point the app will optimize required payment settlements in order to pay out the user.
 
 ### Setup:
@@ -65,6 +65,16 @@ To check the balance of ADDRESS1, just do:
  
 ### Dev Notes
 
+bcoin is required in order to submit tx's to the testnet or mainnet where the master node is deployed. Recommend downloading here and setting your `/.bcoin/bcoin.conf` file with new values like the following (for testnet):
+<p></p>
+`bcoin.conf`
+<pre>
+  network: testnet
+  prefix: ~/.bcoin
+  prune: true
+  api-key: hunter2
+</pre>
+
 Configuration files are loaded from the `/config` sub-directory. The file `default.json` contains development configuration values, while `production.json` contains production configuration values.
 
 To run the Payment Zone HTTP API server (this will change once Cosmos + HTTP server code are integrated to one module):
@@ -87,4 +97,6 @@ Powered by:<br/>
 
 * https://lotionjs.com/
 * http://bcoin.io/guides/multisig-tx.html
+* http://bitcoinfaucet.uo1.net/send.php
+* https://github.com/bitpay/bitcore-message
 

@@ -1,6 +1,7 @@
 {
+  "masterKeyName": "master",
   "externalApiPort": 7000,
   "lotionPort": 3000,
   "isDevelopmentMode": "true",
-  "masterAddress": "GfhUCBSLWSDMFszEkmLWiJWxhT569dQKaK"
+  "masterAddress": "GbXdcE28iyTYNjfWkr1JwqwAxdVsg5yzpH"
 }

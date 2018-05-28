@@ -30,6 +30,8 @@
   "dependencies": {
     "bclient": "^0.0.2",
     "bcoin": "^1.0.0-beta.15",
+    "bitcore-message": "^1.0.4",
+    "body-parser": "^1.18.3",
     "config": "^1.30.0",
     "lotion": "^0.1.18",
     "secp256k1": "^3.5.0"

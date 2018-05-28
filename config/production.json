@@ -1,4 +1,5 @@
 {
   "externalApiPort": 80,
-  "lotionPort": 3000
+  "lotionPort": 3000,
+  "isDevelopmentMode": false
 }

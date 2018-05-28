@@ -8,14 +8,19 @@ const library = (function () {
 
     const fs = require('fs');
     const assert = require('assert');
+
+    const bclient = require('bclient');
+    const WalletClient = bclient.WalletClient;
+    const NodeClient = bclient.NodeClient;
+
     const bcoin = require('bcoin');
     const KeyRing = bcoin.wallet.WalletKey;
-    const Script = bcoin.Script;
-    const MTX = bcoin.MTX;
-    const Amount = bcoin.Amount;
-    const Coin = bcoin.Coin;
+    const Script = bcoin.script;
+    const MTX = bcoin.mtx;
+    const Amount = bcoin.amount;
+    const Coin = bcoin.coin;
 
-    const network = 'regtest';
+    const network = 'testnet';
     /*
      * Use BTC balance from the master account to credit owed BTC amount to the receiver.
      * amount: Amount in BTC provided as string, e.g. '100'
@@ -25,83 +30,35 @@ const library = (function () {
      * 
      */
     async function creditBitcoinToReceiver(amount, receiverAddress, rate, previousTxHash) {
-        // grab private keys
-        const secret1 = fs.readFileSync('./multisig/regtest-key1.wif').toString();
-        const secret2 = fs.readFileSync('./multisig/regtest-key2.wif').toString();
-
-        // generate keyring object (pubkeys too)
-        const ring1 = KeyRing.fromSecret(secret1);
-        const ring2 = KeyRing.fromSecret(secret2);
-
-        const m = 2;
-        const n = 2;
-
-
-        console.log(`crediting ${amount} BTC to ${receiverAddress} at ${rate} rate.`);
-        const pubkey1 = ring1.publicKey;
-        const pubkey2 = ring2.publicKey;
-
-        // the redeem
-        const redeem = Script.fromMultisig(m, n, [pubkey1, pubkey2]);
-        // p2sh script
-        const script = Script.fromScripthash(redeem.hash160());
-        // Send change from transaction back to master address.
-        const changeAddr = script.getAddress().toBase58(network);
-
-        // Previous tx info 
-        const sendTo = receiverAddress; 
-        const txInfo = {
-            value: Amount.fromBTC(amount).toValue(),
-            // Previous transaction hash.
-            hash: previousTxHash,
-            index: 0
+        const client = new NodeClient({ network });
+        const wallet1 = new WalletClient({ id: 'cosigner1', network });
+        const wallet2 = new WalletClient({ id: 'cosigner2', network });
+      
+        // Because we can't sign and spend from account
+        // We can't use `spend` as we do with normal transactions
+        // since it immediately publishes to the network
+        // and we need other signatures first.
+        // So we first create the transaction
+        const outputs = [{ address: sendTo, value: Amount.fromBTC(1).toValue() }];
+        const options = {
+          // rate: 1000,
+          outputs: outputs
         };
-
-        // Coin provides information for the transaction that is aggregated in CoinView within the mtx.
-        // Contains information about the previous output.
-        const coin = Coin.fromJSON({
-            version: 1,
-            height: -1,
-            value: txInfo.value,
-            coinbase: false,
-
-            script: script.toJSON(),
-            hash: txInfo.hash,
-            index: txInfo.index
-        });
-
-        // Now we create mutable transaction object
-        const spend1 = new MTX();
-        ring1.script = redeem;
-
-        // send
-        spend1.addOutput({
-            address: sendTo,
-            value: Amount.fromBTC(amount).toValue()
-        });
-
-        // this will automatically select coins and
-        // send change back to our address
-        await spend1.fund([coin], {
-            rate: rate,
-            changeAddress: changeAddr
-        });
-
-        spend1.scriptInput(0, coin, ring1);
-        spend1.signInput(0, coin, ring1);
-        const raw = spend1.toRaw();
-
-        const spend2 = MTX.fromRaw(raw);
-        spend2.script = redeem;
-        spend2.view.addCoin(coin);
-        spend2.signInput(0, coin, ring2);
-
-        // Both users signed, transaction should be complete.
-        // Let's make sure that the transaction is valid
-        assert(spend2.verify(), 'Transaction isnt valid.');
-        tx = spend2.toRaw().toString('hex')
-        console.log('tx', tx);
-        return tx;
+      
+        // This will automatically find coins and fund the transaction (Sign it),
+        // also create changeAddress and calculate fee
+        const tx1 = await wallet1.createTX('primary', options);
+      
+        // Now you can share this raw output
+        const raw = tx1.hex;
+      
+        // Wallet2 will also sign the transaction
+        const tx2 = await wallet2.sign('primary', raw);
+      
+        // Now we can broadcast this transaction to the network
+        const broadcast = await client.broadcast(tx2.hex);
+        console.log(broadcast);
+        return broadcast;
     }
 
     /*
@@ -116,6 +73,33 @@ const library = (function () {
             return true
         }
         return false
+    }
+
+    async function getTransaction(txId) {
+        const result = await client.getTX(txhash);
+        console.log(result);
+        return result;
+    }
+
+    function processDepositTransaction(tx) {
+        const from = tx['inputs']['coin']['address'];
+        const depositId = tx['hash'];
+
+        const amount = 0;
+        const outputs = tx['outputs']
+        outputs.map((output) => {
+            if (output.address === helper.MASTER_ADDRESS) {
+                amount = output.value;
+            }
+        });
+
+        const transaction = {
+            "from": from,
+            "depositId": depositId,
+            "amount": amount
+        };
+
+        return transaction;
     }
 
     /*
@@ -142,6 +126,24 @@ const library = (function () {
             state.balances[uid] = 0;
         } 
         state.balances[uid] = Math.max(state.balances[uid] + val, 0);
+        return {'address': uid, 'balance': state.balances[uid], 'added': val};
+    }
+
+    /*
+     * addBalance and register the txId as redeemed in the lotion app state.
+     */
+    function deposit(state, uid, val, txId) {
+        if (!state.deposits.hasOwnProperty(uid)) {
+            state.deposits[uid] = [];
+        }
+
+        if (state.deposits[uid].indexOf(txId) > -1) {
+            console.log(`txId ${txId} has already been credited`);
+            return;
+        }
+
+        state.deposits[uid] = state.deposits[uid].concat([txId]);
+        addBalance(state, uid, val);
     }
 
     /*
@@ -153,17 +155,19 @@ const library = (function () {
             const tx = await payoutBitcoinBalance(state, uid, val)
             return tx;
         } else {
-            //console.error("Not enough funds", JSON.stringify(state), uid, val);
+            console.error("Not enough funds in address", uid, val);
             return 'Not enough funds in address ' + uid;
         }
     }
 
     async function payoutBitcoinBalance(state, uid, amount, test) {
         const amountBTC = amount * BTC_PER_SATOSHI;
-        const tx = await creditBitcoinToReceiver(amountBTC + "", 500);
+        const tx = await creditBitcoinToReceiver(amountBTC, 500);
+        // Update the state if the TX was successful.
         if (tx) {
-            // Update the state if the TX was successful.
-            state.balance[uid] = state.balance[uid] - amount;
+            state.balances[uid] = state.balances[uid] - amount;
+        } else {
+            console.error(`tx was null, could not credit ${amount} satoshi to ${uid}`);
         }
         return tx;
     }
@@ -171,6 +175,8 @@ const library = (function () {
     return {
         payout: payout,
         addBalance: addBalance,
+        deposit: deposit,
+        processDepositTransaction: processDepositTransaction,
         getBalance: getBalance,
         hasSufficientBalance: hasSufficientBalance,
         microTransact: microTransact,

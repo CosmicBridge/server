@@ -3,6 +3,9 @@
  * Script to create a multisig address for use with the cosmosbridge application.
  * 2-of-2: Smart contracts building block such as tumblebit, coinswap and Lightning Network.
  * http://bcoin.io/guides/multisig-tx.html
+ * 
+ * WARNING: Make sure you don't accidentally overwrite the keys to an old master address
+ * by running this script. This will generate key files for a new multisig address.
  */
 'use strict';
 
@@ -11,7 +14,8 @@ const bcoin = require('bcoin');
 const KeyRing = bcoin.wallet.WalletKey;
 const Script = bcoin.script;
 
-const network = 'regtest';
+const network = 'testnet';
+
 // use compressed pubkeys
 const compressed = true;
 
