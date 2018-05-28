@@ -14,16 +14,17 @@ const helper = require('./helper');
 const IS_DEV_MODE = config.has('isDevelopmentMode') && config.isDevelopmentMode;
 
 /*
- To load a balance of 3 satoshis onto ADDRESS1, just do:
- curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":3.0}'
+ To register a transaction deposit with cosmicbridge, take the txId and call.
+ curl http://localhost:PORT/txs -d '{"depositId": <TxId>, "command": "deposit"}
+ Your address balance will be credited.
 
  To payout a balance of 3 satoshis onto ADDRESS1, just do:
- curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":-3.0}'
+ curl http://localhost:PORT/txs -d '{"from":"ADDRESS1", "amount":-3.0, "command": "withdraw"}'
 
  To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
- curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0,"proofOfOwnership":"none"}'
+ curl http://localhost:PORT/txs -d '{"from":"ADDRESS1","to":"ADDRESS2","amount":2.0,"signature":"none", "command": "pay"}'
  or
- curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":-2.0,"proofOfOwnership":"none"}'
+ curl http://localhost:PORT/txs -d '{"from":"ADDRESS1","to":"ADDRESS2","amount":-2.0,"signature":"none", "command": "pay"}'
 
  Of coures, 'none' as proofOfOwnership will only work in development.
  In production, put in the TXID of the Bitcoin deposit transaction, signed with the originating address' private key.

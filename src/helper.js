@@ -65,8 +65,8 @@ const library = (function () {
      Perform a microtransaction from wallet of UIDPAYER to wallet of
      UIDRECEIVER for the amount of bitcoin VAL. Return true if successful
      */
-    function microTransact(state, uidPayer, uidReceiver, val) {
-        absVal = Math.abs(val)
+    function microTransact(state, uidPayer, uidReceiver, amount) {
+        absVal = Math.abs(amount)
         if (hasSufficientBalance(state, uidPayer, absVal)) {
             addBalance(state, uidPayer, -1 * absVal)
             addBalance(state, uidReceiver, absVal)
@@ -106,8 +106,8 @@ const library = (function () {
      Checks the balance to make sure that the wallet of UID has at least
      VAL bitcoin
      */
-    function hasSufficientBalance(state, uid, val) {
-        return (state.balances.hasOwnProperty(uid) && state.balances[uid] >= Math.abs(val));
+    function hasSufficientBalance(state, uid, amount) {
+        return (state.balances.hasOwnProperty(uid) && state.balances[uid] >= Math.abs(amount));
     }
 
     function getBalance(state, uid) {
@@ -121,18 +121,18 @@ const library = (function () {
      If UID does not exist, adds it to the wallet. Otherwise, adds VAL to the balance of UID
      If VAL is negative and UID does not yet exist, credit 0 balance
      */
-    function addBalance(state, uid, val) {
+    function addBalance(state, uid, amount) {
         if (!state.balances.hasOwnProperty(uid)) {
             state.balances[uid] = 0;
         } 
-        state.balances[uid] = Math.max(state.balances[uid] + val, 0);
-        return {'address': uid, 'balance': state.balances[uid], 'added': val};
+        state.balances[uid] = Math.max(state.balances[uid] + amount, 0);
+        return {'address': uid, 'balance': state.balances[uid], 'added': amount};
     }
 
     /*
      * addBalance and register the txId as redeemed in the lotion app state.
      */
-    function deposit(state, uid, val, txId) {
+    function deposit(state, uid, amount, txId) {
         if (!state.deposits.hasOwnProperty(uid)) {
             state.deposits[uid] = [];
         }
@@ -143,19 +143,19 @@ const library = (function () {
         }
 
         state.deposits[uid] = state.deposits[uid].concat([txId]);
-        addBalance(state, uid, val);
+        addBalance(state, uid, amount);
     }
 
     /*
      Performs a transaction on the bitcoin blockchain to payout to UID for
      VAL
      */
-    async function payout(state, uid, val) {
-        if (hasSufficientBalance(state, uid, val)) {
-            const tx = await payoutBitcoinBalance(state, uid, val)
+    async function payout(state, uid, amount) {
+        if (hasSufficientBalance(state, uid, amount)) {
+            const tx = await payoutBitcoinBalance(state, uid, amount)
             return tx;
         } else {
-            console.error("Not enough funds in address", uid, val);
+            console.error("Not enough funds in address", uid, amount);
             return 'Not enough funds in address ' + uid;
         }
     }

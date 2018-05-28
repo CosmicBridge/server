@@ -43,19 +43,19 @@ npm install && npm start
 
 To load a balance of 3 satoshis onto ADDRESS1, just do:
 
-  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":3.0}'`
+  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "amount":3.0}'`
   
 To payout a balance of 3 satoshis onto ADDRESS1, just do:
 
-  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "val":-3.0}'`
+  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "amount":-3.0}'`
   
 To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
 
- `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":2.0}'`
+ `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","amount":2.0}'`
  
   or
       
-  `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","val":-2.0}'`
+  `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","amount":-2.0}'`
   
 To check the balance of ADDRESS1, just do:
 
