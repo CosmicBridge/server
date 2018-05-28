@@ -7,7 +7,6 @@ const lotion = require('lotion');
 
 const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
 
-const Message = require('bitcore-message');
 const helper = require('./helper');
 
 // Development mode
@@ -39,7 +38,6 @@ const IS_DEV_MODE = config.has('isDevelopmentMode') && config.isDevelopmentMode;
  blockchain with the WALLET
 
  balances: dictionary of a UID (unique identifier or public key) to the amount of bitcoin (in satoshis) tied to that balance.
-
  */
 
 let app = lotion({
@@ -102,8 +100,11 @@ app.use(async (state, tx) => {
                     return;
                 }
 
-                // Sender should sign the string 'cosmicbridge' with his/her primary key and pass as signature here.
-                const isValid = Message("cosmicbridge").verify(tx.from, tx.signature);
+                // TODO - we need to have the bitcoin transaction ID of the claimed deposit, depends on bcoin integration
+                const bitcoinDepositTxId = "TODO"; 
+
+                // Sender should pass in the signature for the bitcoinDepositTxId from one of the deposit transactions as proof of ownership.
+                const isValid = secp256k1.verify(bitcoinDepositTxId, tx.signature, tx.from);
                 if (isValid && helper.microTransact(state, tx.from, tx.to, tx.amount)) {
                     console.log('Success')
                 } else {
