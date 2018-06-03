@@ -17,6 +17,9 @@ const library = (function () {
     const Amount = bcoin.amount;
     const Coin = bcoin.coin;
 
+    const network = config.bitcoinNetwork;
+    const client = new NodeClient({ network });
+
     function getInitialMasterWalletAddress() {
       // TODO future - return proper multisig managed address. Further down the road, that address can change during the lifetime of the system as the validator set changes
       return config.masterAddress;
@@ -24,7 +27,6 @@ const library = (function () {
 
     console.log('Using Master:', getInitialMasterWalletAddress());
 
-    const network = 'testnet';
     /*
      * Use BTC balance from the master account to credit owed BTC amount to the receiver.
      * amount: Amount in BTC provided as string, e.g. '100'
@@ -34,7 +36,6 @@ const library = (function () {
      * 
      */
     async function creditBitcoinToReceiver(amount, receiverAddress, rate, previousTxHash) {
-        const client = new NodeClient({ network });
         const wallet1 = new WalletClient({ id: 'cosigner1', network });
         const wallet2 = new WalletClient({ id: 'cosigner2', network });
       
@@ -184,16 +185,16 @@ const library = (function () {
     }
 
     return {
-        payout: payout,
-        addBalance: addBalance,
-        deposit: deposit,
-        processDepositTransaction: processDepositTransaction,
-        getBalance: getBalance,
-        hasSufficientBalance: hasSufficientBalance,
-        microTransact: microTransact,
+        payout,
+        addBalance,
+        deposit,
+        processDepositTransaction,
+        getBalance,
+        hasSufficientBalance,
+        microTransact,
         getFirstDepositTxIdForAddress,
         getInitialMasterWalletAddress,
-        BTC_PER_SATOSHI: BTC_PER_SATOSHI
+        BTC_PER_SATOSHI
     };
 
 })();
