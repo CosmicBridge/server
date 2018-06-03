@@ -6,30 +6,39 @@ const bclient = require('bclient');
 const NodeClient = bclient.NodeClient;
 const WalletClient = bclient.WalletClient
 
-const network = 'testnet';
+const Network = bcoin.network;
+const testnet = Network.get('testnet');
+testnet['api-key'] = 'hunter2';
+
+const network = testnet.type;
+
 const m = 2;
 const n = 2;
 
-const client = new NodeClient({ network });
+const client = new NodeClient(testnet);
+// const client = new WalletClient( {network} )
 
 // Wrapper for skipping errors, when you rerun the script
 // It could have been as simple as
 //  await client.createWallet('primary', options);
 const createMultisigWallet = async function createMultisigWallet(client, options, skipExists) {
-  assert(client instanceof NodeClient, 'client should be NodeClient');
+  // assert(client instanceof NodeClient, 'client should be NodeClient');
   assert(options.id, 'You need to provide id in options');
 
   const defaultOpts = {
     type: 'multisig',
     m: m,
-    n: n
+    n: n,
   };
 
   Object.assign(defaultOpts, options);
+  // Object.assign(defaultOpts, testnet);
+
+  const walletClient = new WalletClient(defaultOpts);
 
   let res;
   try {
-    res = await client.createWallet('primary', defaultOpts);
+    res = await walletClient.createWallet('primary', defaultOpts);
   } catch (e) {
     if (skipExists && e.message === 'WDB: Wallet already exists.') {
       return null;

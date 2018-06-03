@@ -1,4 +1,6 @@
 src/node_modules
+.DS_Store
+img/.DS_Store
 src/node_modules/
 node_modules
 yarn-error.log

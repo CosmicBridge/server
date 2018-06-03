@@ -75,6 +75,14 @@ bcoin is required in order to submit tx's to the testnet or mainnet where the ma
   api-key: hunter2
 </pre>
 
+or use the following command:
+
+<pre>
+bcoin --http-host=0.0.0.0 --api-key hunter2 --network=testnet --prune --daemon
+</pre>
+
+removing the network flag with testnet for production deployments.
+
 Configuration files are loaded from the `/config` sub-directory. The file `default.json` contains development configuration values, while `production.json` contains production configuration values.
 
 To run the Payment Zone HTTP API server (this will change once Cosmos + HTTP server code are integrated to one module):

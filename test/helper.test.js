@@ -4,7 +4,7 @@ function mockFunctions() {
     const original = require.requireActual('../src/helper');
     return {
       ...original, //Pass down all the exported objects
-      creditBitcoinToReceiver: jest.fn(() => {console.log('I didnt call the original')}),
+      creditBitcoinToReceiver: jest.fn(() => {console.log('creditBitcoinToReceiver mock method called')}),
     }
 }
 jest.mock('../src/helper', () => mockFunctions());
