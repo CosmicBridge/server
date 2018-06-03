@@ -1,9 +1,6 @@
 const library = (function () {
     const config = require('config'); 
 
-    const MASTER_ADDRESS = config.masterAddress;
-    console.log('Using Master:', MASTER_ADDRESS);
-
     const BTC_PER_SATOSHI = 0.00000001;
 
     const fs = require('fs');
@@ -19,6 +16,13 @@ const library = (function () {
     const MTX = bcoin.mtx;
     const Amount = bcoin.amount;
     const Coin = bcoin.coin;
+
+    function getInitialMasterWalletAddress() {
+      // TODO future - return proper multisig managed address. Further down the road, that address can change during the lifetime of the system as the validator set changes
+      return config.masterAddress;
+    }
+
+    console.log('Using Master:', getInitialMasterWalletAddress());
 
     const network = 'testnet';
     /*
@@ -81,14 +85,21 @@ const library = (function () {
         return result;
     }
 
-    function processDepositTransaction(tx) {
+    async function getFirstDepositTxIdForAddress(depositorAddress, masterAddress) {
+      const txFromAddressArr = await client.getTXByAddress(depositorAddress);
+      const firstDepositTx = txFromAddressArr.find(tx =>
+        tx.outputs.find(outputEntry.address === masterAddress) !== undefined);
+      return firstDepositTx ? firstDepositTx.hash : undefined;
+    }
+
+    function processDepositTransaction(tx, masterAddress) {
         const from = tx['inputs']['coin']['address'];
         const depositId = tx['hash'];
 
         const amount = 0;
         const outputs = tx['outputs']
         outputs.map((output) => {
-            if (output.address === helper.MASTER_ADDRESS) {
+            if (output.address === masterAddress) {
                 amount = output.value;
             }
         });
@@ -180,8 +191,9 @@ const library = (function () {
         getBalance: getBalance,
         hasSufficientBalance: hasSufficientBalance,
         microTransact: microTransact,
-        BTC_PER_SATOSHI: BTC_PER_SATOSHI,
-        MASTER_ADDRESS: MASTER_ADDRESS
+        getFirstDepositTxIdForAddress,
+        getInitialMasterWalletAddress,
+        BTC_PER_SATOSHI: BTC_PER_SATOSHI
     };
 
 })();

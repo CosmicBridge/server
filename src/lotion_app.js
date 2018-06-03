@@ -4,7 +4,6 @@
 const axios = require('axios');
 const config = require('config');
 const lotion = require('lotion');
-
 const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
 
 const helper = require('./helper');
@@ -43,7 +42,10 @@ const IS_DEV_MODE = config.has('isDevelopmentMode') && config.isDevelopmentMode;
 let app = lotion({
     // lotion options
     initialState: {
-        wallet: {},
+        wallet: {
+          // We save the master wallet address on the chain. This is how clients know where to send their deposits
+          masterAddress: helper.getInitialMasterWalletAddress()
+        },
         // Accounts keeps track of credited balances for users based on BTC they have sent to the master address.
         deposits: {}, // keeps track of claimed deposit tx ids.
         balances: {}, // map of {bitcoinAddress: ..., credit: Y}.
@@ -69,13 +71,13 @@ app.use(async (state, tx) => {
 
                 const bcoinTx = await helper.getTransaction(tx.depositId);
                 // Extract an amount (if present) addressed to the master address;
-                const transaction = helper.processDepositTransaction(bcoinTx);
+                const transaction = helper.processDepositTransaction(bcoinTx, state.wallet.masterAddress);
                 if (transaction.amount > 0) {
                     console.log(`Balance added for an amount of ${transaction.amount} satoshis from ${transaction.from}.`);
                     // Claim deposit and register on cosmicbridge.
                     helper.deposit(state, transaction.from, transaction.amount, tx.depositId);
                 } else {
-                    console.log(`Transaction not to ${helper.MASTER_ADDRESS} or has already been claimed`);
+                    console.log(`Transaction not to ${helper.getMasterWalletAddress()} or has already been claimed`);
                 }
             }
             break;
@@ -100,15 +102,20 @@ app.use(async (state, tx) => {
                     return;
                 }
 
-                // TODO - we need to have the bitcoin transaction ID of the claimed deposit, depends on bcoin integration
-                const bitcoinDepositTxId = "TODO"; 
+                // get the bitcoin transaction ID of the claimed deposit, depends on bcoin integration
+                const bitcoinDepositTxId = helper.getFirstDepositTxIdForAddress(tx.from, state.wallet.masterAddress);
 
-                // Sender should pass in the signature for the bitcoinDepositTxId from one of the deposit transactions as proof of ownership.
-                const isValid = secp256k1.verify(bitcoinDepositTxId, tx.signature, tx.from);
-                if (isValid && helper.microTransact(state, tx.from, tx.to, tx.amount)) {
-                    console.log('Success')
-                } else {
-                    console.log("Failed, not enough balance or invalid signature given")
+                if (bitcoinDepositTxId === undefined) {
+                  console.log("Failed, cannot find deposit transaction from this address");
+                }
+                else {
+                  // Sender should pass in the signature for the bitcoinDepositTxId from one of the deposit transactions as proof of ownership.
+                  const isValid = secp256k1.verify(bitcoinDepositTxId, tx.signature, tx.from);
+                  if (isValid && helper.microTransact(state, tx.from, tx.to, tx.amount)) {
+                      console.log('Success');
+                  } else {
+                      console.log("Failed, not enough balance or invalid signature given");
+                  }
                 }
             }
             break;
