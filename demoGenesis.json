@@ -1,0 +1,30 @@
+{"app_hash":"7c3d00ea1e3b1cda8aa693e3a9514402a38663508abd05ea1f14c4ec708fc5e5",
+    "chain_id":"test-chain-tAU9BS",
+    "genesis_time":"0001-01-01T00:00:00Z",
+    "validators":[
+        {
+            "name":"DemoValidator1",
+            "power":10,
+            "pub_key":{
+                "data":"E11C74B14A91463E0EFDB37C3B436EE4254BA4B2582D339EC3D97F445EAFF5DB",
+                "type":"ed25519"
+                }
+        },
+        {
+            "name":"DemoValidator2",
+            "power":10,
+            "pub_key":{
+                "data":"F8A3394E32DC2741559004DDE84447860E29123EE7C758A82D8D4AD7CBC2097D",
+                "type":"ed25519"
+                }
+        },
+        {
+            "name":"DemoValidator3",
+            "power":10,
+            "pub_key":{
+                "data":"906BF9BE56D1B474F62C1B01901B947280A73FCE82F8CED5BF96C1AEB3ACCF15",
+                "type":"ed25519"
+                }
+        }
+    ]
+}

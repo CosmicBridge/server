@@ -51,6 +51,15 @@ let app = lotion({
         balances: {}, // map of {bitcoinAddress: ..., credit: Y}.
         networkfee: 0.001, // Currently a constant
     },
+    genesis: "demoGenesis.json",
+    keys: "demoKey1.json",
+    //peers:[] is required for validators to connect to each other.
+    //Will be obsolete once automatic peer discovery is implemented
+    //Actually only 1 IP is needed, but doesn't hurt to add more especially if IP chagnes
+    peers:['10.0.2.15:46661','10.0.2.8:46661','10.0.2.9:46661'],
+    logtendermint: false,
+    tendermintPort: 46657,
+    p2pPort: 46661,
     devMode: true
 });
 
