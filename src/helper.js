@@ -11,14 +11,13 @@ const library = (function () {
     const NodeClient = bclient.NodeClient;
 
     const bcoin = require('bcoin');
-    const KeyRing = bcoin.wallet.WalletKey;
-    const Script = bcoin.script;
-    const MTX = bcoin.mtx;
-    const Amount = bcoin.amount;
-    const Coin = bcoin.coin;
 
-    const network = config.bitcoinNetwork;
-    const client = new NodeClient({ network });
+    // Itamar - seems like the way to set it, even though it's not what the docs show
+    const bitcoinNetwork = bcoin.network.get(config.bitcoinNetwork);
+    const client = new NodeClient({
+      network: bitcoinNetwork.type,
+      port: bitcoinNetwork.rpcPort
+    });
 
     function getInitialMasterWalletAddress() {
       // TODO future - return proper multisig managed address. Further down the road, that address can change during the lifetime of the system as the validator set changes
@@ -36,15 +35,19 @@ const library = (function () {
      * 
      */
     async function creditBitcoinToReceiver(amount, receiverAddress, rate, previousTxHash) {
-        const wallet1 = new WalletClient({ id: 'cosigner1', network });
-        const wallet2 = new WalletClient({ id: 'cosigner2', network });
+        const walletClient = new WalletClient({
+          network: bitcoinNetwork.type,
+          port: bitcoinNetwork.walletPort
+        });
+        const wallet1 = walletClient.wallet('cosigner1');
+        const wallet2 = walletClient.wallet('cosigner2');
       
         // Because we can't sign and spend from account
         // We can't use `spend` as we do with normal transactions
         // since it immediately publishes to the network
         // and we need other signatures first.
         // So we first create the transaction
-        const outputs = [{ address: sendTo, value: Amount.fromBTC(1).toValue() }];
+        const outputs = [{ address: sendTo, value: bcoin.amount.fromBTC(1).toValue() }];
         const options = {
           // rate: 1000,
           outputs: outputs
@@ -80,16 +83,18 @@ const library = (function () {
         return false
     }
 
-    async function getTransaction(txId) {
+    async function getBitcoinTransaction(txhash) {
         const result = await client.getTX(txhash);
-        console.log(result);
         return result;
     }
 
     async function getFirstDepositTxIdForAddress(depositorAddress, masterAddress) {
-      const txFromAddressArr = await client.getTXByAddress(depositorAddress);
-      const firstDepositTx = txFromAddressArr.find(tx =>
-        tx.outputs.find(outputEntry.address === masterAddress) !== undefined);
+      const txByAddressArr = await client.getTXByAddress(depositorAddress);
+      // bcoin returns the transactions in no particular order - at least so it seems
+      const sortedTxByAddressArr = txByAddressArr.sort((a, b) => a.time - b.time);
+      const firstDepositTx = sortedTxByAddressArr.find(tx =>
+        (tx.inputs.find(inputEntry => inputEntry.coin.address === depositorAddress) !== undefined) &&
+        (tx.outputs.find(outputEntry => outputEntry.address === masterAddress) !== undefined));
       return firstDepositTx ? firstDepositTx.hash : undefined;
     }
 
@@ -192,6 +197,7 @@ const library = (function () {
         getBalance,
         hasSufficientBalance,
         microTransact,
+        getBitcoinTransaction,
         getFirstDepositTxIdForAddress,
         getInitialMasterWalletAddress,
         BTC_PER_SATOSHI
