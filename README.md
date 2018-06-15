@@ -31,15 +31,9 @@ Cosmic Bridge can be used for any application that requires cheap, fast and audi
 * Users can "credit" other users by invoking app transaction methods which will adjust the participant's balance on the app `state.balances` dictionary.
 * Users can withdraw their balance at any time, at which point the app will optimize required payment settlements in order to pay out the user.
 
-### Setup:
-
-To start a Cosmic Bridge node, run the following command from the `/src` directory:
-
-<pre>
-npm install && npm start
-</pre>
-
 ### Interacting with the Payment Zone or Lotion App:
+
+Generally, connecting to the payment zone should be done via the Tendermint API. Following are a few examples you can run from the command line.
 
 To load a balance of 3 satoshis onto ADDRESS1, just do:
 
@@ -63,43 +57,43 @@ To check the balance of ADDRESS1, just do:
   
   Which returns a JSON dictionary, and then use the key 'balances' and then key 'ADDRESS1' to get the balance for ADDRESS1
  
-### Dev Notes
+### Setup & Deployment Notes
 
-bcoin is required in order to submit tx's to the testnet or mainnet where the master node is deployed. Recommend downloading here and setting your `/.bcoin/bcoin.conf` file with new values like the following (for testnet):
+To start a Cosmic Bridge node, run the following command:
+
+<pre>
+npm install && npm start
+</pre>
+
+*bcoin* is required on every validator node in order to test transactions for correctness and submit transactions to the bitcoin network. Indexing of transactions and addresses is required in order to support the queries done by the validator nodes. Set your `/.bcoin/bcoin.conf` file with new values like the following (for testnet):
 <p></p>
 `bcoin.conf`
 <pre>
   network: testnet
   prefix: ~/.bcoin
-  prune: true
   api-key: hunter2
+  prune: false
+  index-tx: true
+  index-address: true
 </pre>
 
 or use the following command:
 
 <pre>
-bcoin --http-host=0.0.0.0 --api-key hunter2 --network=testnet --prune --daemon
+bcoin --http-host=0.0.0.0 --api-key hunter2 --network=testnet --daemon --index-tx --index-address
 </pre>
 
 removing the network flag with testnet for production deployments.
 
 Configuration files are loaded from the `/config` sub-directory. The file `default.json` contains development configuration values, while `production.json` contains production configuration values.
 
-To run the Payment Zone HTTP API server (this will change once Cosmos + HTTP server code are integrated to one module):
-
-<pre>
-  npm run start-http
-</pre>
-
 Running tests:
 <pre>
-  yarn test
+  npm test
 </pre>
-
 
 Powered by:<br/>
 <img src="./img/lotion.png" style="width: 300px"/>
-
 
 ### Useful Links
 
