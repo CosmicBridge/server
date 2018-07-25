@@ -9,13 +9,13 @@ For architectural overview, see here: https://docs.google.com/presentation/d/1-8
 
 ### Concept
 
-The Cosmic Bridge server node both serves as a validator/facilitator of transactions and a repository of funds.
+The Cosmic Bridge server node serves as a validator/facilitator of transactions.
 
-In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address - a specific wallet on the Bitcoin blockchain. Once bitcoin has been received, users can batch bitcoin transactions off-chain using Lotion.js which is paid out while optimizing the number of required transactions.
+The funds are stored in a multi-sig wallet ; any payment needs to be properly signed by a subset of the validators.
 
-* The server node will accumulate transactions of its participants.
-* These transactions will be posted/validated by the cosmos distributed network, bundled, and can be paid out on demand.
-* Users save transaction fees by bundling up transactions on the bitcoin network.
+In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address - a specific wallet on the Bitcoin blockchain. Once bitcoin has been received, users can micro-transact bitcoin on a Cosmos chain (this chain is the "payment zone"). The balances are paid out periodically or on-demand on the Bitcoin chain, vastly reducing the number of required transactions (and hence the transaction fees paid).
+
+The end result is that users save transaction fees by bundling up transactions on the bitcoin network while still enjoying transparency and safety. In return, the complete trustlessness of the Bitcoin chain is exchanged with a degree of trust in the validator set of the payment zone. We believe this compromise is acceptable for many potential uses.
 
 ### Potential Uses
 
@@ -24,12 +24,15 @@ Cosmic Bridge can be used for any application that requires cheap, fast and audi
 * Bitcoin micropayments
 * Dark pools of BTC liquidity between exchanges or large traders
 * A merchant network supporting free bitcoin payments for participating merchants
- 
+
 ### How it works:
 * Create a new multisig wallet that will be used as the master address.
 * Advertise the master address for users to contribute bitcoin to.
 * Users can "credit" other users by invoking app transaction methods which will adjust the participant's balance on the app `state.balances` dictionary.
 * Users can withdraw their balance at any time, at which point the app will optimize required payment settlements in order to pay out the user.
+
+### Staking
+Right now the system does not involve stake mechanics, since the idea is to rely on a trusted, well-known set of validators. In the future, staking mechanics, based on BTC staking or a native token, could be implemented easily as Cosmos supports them.
 
 ### Interacting with the Payment Zone or Lotion App:
 
