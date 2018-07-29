@@ -1,4 +1,9 @@
-# Cosmic Bridge
+<p align="center">
+  <img src="./img/cosmic_bridge.png" width="325"/>
+</p>
+
+Cosmic Bridge
+---
 
 [![Dependency Status](https://david-dm.org/CosmicBridge/server.svg)](https://david-dm.org/CosmicBridge/server)
 [![devDependencies Status](https://david-dm.org/CosmicBridge/server/dev-status.svg)](https://david-dm.org/CosmicBridge/server?type=dev)
@@ -95,8 +100,11 @@ Running tests:
   npm test
 </pre>
 
-Powered by:<br/>
-<img src="./img/lotion.png" style="width: 300px"/>
+<b>Powered by the Lotion dapp framework:</b><br/>
+
+<p align="center">
+  <img src="./img/lotion.png" width="300"/>
+</p>
 
 ### Useful Links
 
