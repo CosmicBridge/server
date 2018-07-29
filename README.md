@@ -60,9 +60,9 @@ To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
 ### Checking the app state (Balances).
 To check the balance of ADDRESS1, just do:
 
-  `curl http://localhost:PORT/state`
+`curl http://localhost:PORT/state`
   
-  Which returns a JSON dictionary, and then use the key 'balances' and then key 'ADDRESS1' to get the balance for ADDRESS1
+Which returns a JSON dictionary, and then use the key 'balances' and then key 'ADDRESS1' to get the balance for ADDRESS1
  
 ### Setup
 

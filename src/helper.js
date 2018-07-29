@@ -2,6 +2,7 @@ const library = (function () {
     const config = require('config'); 
 
     const BTC_PER_SATOSHI = 0.00000001;
+    const TX_RATE = 1000;
 
     const fs = require('fs');
     const assert = require('assert');
@@ -32,38 +33,29 @@ const library = (function () {
      * amount: Amount in BTC provided as string, e.g. '100'
      * receiverAddress: address of receiver"moTyiK7aExe2v3hFJ9BCsYooTziX15PGuA" or 'RF1PJ1VkHG6H9dwoE2k19a5aigWcWr6Lsu';
      * previousTxHash: Hash of the previously credited BTC to the master address to be used in this transaction.
-     * rate for transaction (ex: 500). // TODO: use dynamic rate evaluation.
+     * rate for transaction (ex: 1000). // TODO: use dynamic rate evaluation.
      * 
      */
-    async function creditBitcoinToReceiver(amount, receiverAddress, rate, previousTxHash) {
-        const walletClient = new WalletClient({
-          network: bitcoinNetwork.type,
-          port: bitcoinNetwork.walletPort
-        });
-        const wallet1 = walletClient.wallet('cosigner1');
-        const wallet2 = walletClient.wallet('cosigner2');
-      
-        // Because we can't sign and spend from account
-        // We can't use `spend` as we do with normal transactions
-        // since it immediately publishes to the network
-        // and we need other signatures first.
-        // So we first create the transaction
-        const outputs = [{ address: sendTo, value: bcoin.amount.fromBTC(1).toValue() }];
+    async function creditBitcoinToReceiver(amount, receiverAddress) {
+        const wallet1 = new WalletClient({ id: 'cosigner1', network });
+        const wallet2 = new WalletClient({ id: 'cosigner2', network });
+
+        // Transaction options.
+        const outputs = [{ address: receiverAddress, value: Amount.fromBTC(amount).toValue() }];
         const options = {
-          // rate: 1000,
-          outputs: outputs
+            outputs: outputs
         };
-      
+
         // This will automatically find coins and fund the transaction (Sign it),
-        // also create changeAddress and calculate fee
+        // also create changeAddress and calculate fee.
         const tx1 = await wallet1.createTX('primary', options);
-      
-        // Now you can share this raw output
+
+        // Now you can share this raw output.
         const raw = tx1.hex;
-      
-        // Wallet2 will also sign the transaction
+
+        // Wallet2 will also sign the transaction.
         const tx2 = await wallet2.sign('primary', raw);
-      
+
         // Now we can broadcast this transaction to the network
         const broadcast = await client.broadcast(tx2.hex);
         console.log(broadcast);
@@ -178,9 +170,9 @@ const library = (function () {
         }
     }
 
-    async function payoutBitcoinBalance(state, uid, amount, test) {
+    async function payoutBitcoinBalance(state, uid, amount) {
         const amountBTC = amount * BTC_PER_SATOSHI;
-        const tx = await creditBitcoinToReceiver(amountBTC, 500);
+        const tx = await creditBitcoinToReceiver(amountBTC, uid, 500);
         // Update the state if the TX was successful.
         if (tx) {
             state.balances[uid] = state.balances[uid] - amount;
