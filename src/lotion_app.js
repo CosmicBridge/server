@@ -52,13 +52,11 @@ let app = lotion({
         balances: {}, // map of {bitcoinAddress: ..., credit: Y}.
         networkfee: 0.001, // Currently a constant
     },
-    // genesis: "demoGenesis.json",
-    // keys: "demoKey1.json",
+    // genesis: "genesis.json", // add genesis for production peers. Without a genesis block, the app will create a new GCI each time it's run.
+    // keys: "key.json", // add keys for production peers.
     // Peers:[] is required for validators to connect to each other.
-    // Will be obsolete once automatic peer discovery is implemented
-    // Only 1 IP is actually needed, but multiple will make resilient to potential peer IP changes in the future.
-    peers: ['10.0.2.15:46661','10.0.2.8:46661','10.0.2.9:46661'],
-    // peers: [],
+    // Add additional validators/peers here.
+    peers: [],
     logtendermint: config.logtendermint || false,
     tendermintPort: 46657,
     p2pPort: 46661,

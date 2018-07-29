@@ -106,6 +106,10 @@ removing the network flag for mainnet deployments. Note that the `index-tx` and 
   npm test
 </pre>
 
+### Notes for production use
+
+For a mainnet app, you'll want to define a set of validators as well as a genesis block so the app doesn't create a new GCI each time the app is run. This is documented further in the initial state of `lotion_app.js`.
+
 ### Useful Links
 
 * https://lotionjs.com/
