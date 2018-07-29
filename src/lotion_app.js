@@ -10,6 +10,7 @@ const helper = require('./helper');
 
 // Development mode (for local testing without bitcoin network).
 const IS_DEV_MODE = config.has('isDevelopmentMode') && config.isDevelopmentMode;
+console.log('DEV_MODE', IS_DEV_MODE)
 
 /*
  To register a transaction deposit with cosmicbridge, take the txId and call.
