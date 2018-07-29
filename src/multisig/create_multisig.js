@@ -12,7 +12,7 @@
 const fs = require('fs');
 const bcoin = require('bcoin');
 const KeyRing = bcoin.wallet.WalletKey;
-const Script = bcoin.script;
+const Script = bcoin.Script;
 
 const network = 'testnet';
 

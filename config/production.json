@@ -1,5 +1,6 @@
 {
   "externalApiPort": 80,
   "lotionPort": 3000,
+  "apiKey": "hunter2",
   "isDevelopmentMode": false
 }

@@ -4,7 +4,8 @@
   "description": "Cosmic Bridge Server Node",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "jest": "jest --env=node --colors --coverage test",
+    "test": "npm run jest",
     "start": "node src/main.js",
     "master": "node src/multisig/create_multisig.js"
   },

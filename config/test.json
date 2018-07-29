@@ -4,7 +4,6 @@
   "lotionPort": 3000,
   "apiKey": "hunter2",
   "isDevelopmentMode": "true",
-  "logtendermint": true,
   "masterAddress": "GbXdcE28iyTYNjfWkr1JwqwAxdVsg5yzpH",
   "bitcoinNetwork": "testnet"
 }

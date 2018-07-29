@@ -18,9 +18,9 @@ The Cosmic Bridge server node serves as a validator/facilitator of transactions.
 
 The funds are stored in a multi-sig wallet ; any payment needs to be properly signed by a subset of the validators.
 
-In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address - a specific wallet on the Bitcoin blockchain. Once bitcoin has been received, users can micro-transact bitcoin on a Cosmos chain (this chain is the "payment zone"). The balances are paid out periodically or on-demand on the Bitcoin chain, vastly reducing the number of required transactions (and hence the transaction fees paid).
+In order to participate in the Cosmic Bridge network, a user should send bitcoin to a particular payment zone address - a specific wallet on the Bitcoin blockchain. Once bitcoin has been received, users can micro-transact bitcoin on a Cosmos chain (this chain is the "payment zone"). The balances can be paid out on-demand on the Bitcoin chain, vastly reducing the number of required transactions (and hence the transaction fees paid) as the number of transactions on the off-chain network increases.
 
-The end result is that users save transaction fees by bundling up transactions on the bitcoin network while still enjoying transparency and safety. In return, the complete trustlessness of the Bitcoin chain is exchanged with a degree of trust in the validator set of the payment zone. We believe this compromise is acceptable for many potential uses.
+The end result is that users save transaction fees by bundling up transactions on the bitcoin network while still enjoying transparency and safety. In return, the complete trustlessness of the Bitcoin chain is exchanged with a degree of trust in the validator set of the payment zone. This compromise can be acceptable for many potential uses, such as large volumes of micropayments.
 
 ### Potential Uses
 
@@ -30,42 +30,49 @@ Cosmic Bridge can be used for any application that requires cheap, fast and audi
 * Dark pools of BTC liquidity between exchanges or large traders
 * A merchant network supporting free bitcoin payments for participating merchants
 
-### How it works:
-* Create a new multisig wallet that will be used as the master address.
-* Advertise the master address for users to contribute bitcoin to.
-* Users can "credit" other users by invoking app transaction methods which will adjust the participant's balance on the app `state.balances` dictionary.
-* Users can withdraw their balance at any time, at which point the app will optimize required payment settlements in order to pay out the user.
-
 ### Staking
 Right now the system does not involve stake mechanics, since the idea is to rely on a trusted, well-known set of validators. In the future, staking mechanics, based on BTC staking or a native token, could be implemented easily as Cosmos supports them.
 
-### Interacting with the Payment Zone or Lotion App:
+### How it works
+
+<b>The network supports three main transaction types once the app is running</b>
 
 Generally, connecting to the payment zone should be done via the Tendermint API. Following are a few examples you can run from the command line.
 
-To load a balance of 3 satoshis onto ADDRESS1, just do:
+* User wants to register a particular transaction to the masteraddress as a deposit into the payment zone network.
+To deposit a balance of 3 satoshis onto ADDRESS1, just do:
 
   `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "amount":3.0}'`
   
+* User wants to withdraw funds from the payment zone into his/her bitcoin account.
 To payout a balance of 3 satoshis onto ADDRESS1, just do:
 
   `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "amount":-3.0}'`
-  
+
+* User wants to send funds from within the payment zone to another address.  
 To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
 
  `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","amount":2.0}'`
- 
   or
-      
   `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","amount":-2.0}'`
-  
+
+
+### Checking the app state (Balances).
 To check the balance of ADDRESS1, just do:
 
   `curl http://localhost:PORT/state`
   
   Which returns a JSON dictionary, and then use the key 'balances' and then key 'ADDRESS1' to get the balance for ADDRESS1
  
-### Setup & Deployment Notes
+### Setup
+
+<p>Examine the config files first.</p>
+
+If you're creating a new payment zone (or app), you should create a new multisig wallet for the master address. This can be done from the `src/multisig` folder by running the `create_multisig.js` script.
+
+Configuration files are loaded from the `/config` sub-directory. The file `default.json` contains development configuration values, while `production.json` contains production (mainnet) configuration values.
+
+#### Running the Cosmic Bridge app (creating a payment zone).
 
 To start a Cosmic Bridge node, run the following command:
 
@@ -91,20 +98,13 @@ or use the following command:
 bcoin --http-host=0.0.0.0 --api-key hunter2 --network=testnet --daemon --index-tx --index-address
 </pre>
 
-removing the network flag with testnet for production deployments.
+removing the network flag for mainnet deployments. Note that the `index-tx` and `index-address` flags are required by the node in order to perform historic queries on the master address.
 
-Configuration files are loaded from the `/config` sub-directory. The file `default.json` contains development configuration values, while `production.json` contains production configuration values.
+### Running tests (jest):
 
-Running tests:
 <pre>
   npm test
 </pre>
-
-<b>Powered by the Lotion dapp framework:</b><br/>
-
-<p align="center">
-  <img src="./img/lotion.png" width="300"/>
-</p>
 
 ### Useful Links
 
@@ -113,3 +113,8 @@ Running tests:
 * http://bitcoinfaucet.uo1.net/send.php
 * https://github.com/bitpay/bitcore-message
 
+<b>Powered by the Lotion dapp framework:</b><br/>
+
+<p align="center">
+  <img src="./img/lotion.png" width="300"/>
+</p>

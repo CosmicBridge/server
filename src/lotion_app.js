@@ -8,7 +8,7 @@ const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
 
 const helper = require('./helper');
 
-// Development mode
+// Development mode (for local testing without bitcoin network).
 const IS_DEV_MODE = config.has('isDevelopmentMode') && config.isDevelopmentMode;
 
 /*
@@ -51,13 +51,14 @@ let app = lotion({
         balances: {}, // map of {bitcoinAddress: ..., credit: Y}.
         networkfee: 0.001, // Currently a constant
     },
-    genesis: "demoGenesis.json",
-    keys: "demoKey1.json",
-    //peers:[] is required for validators to connect to each other.
-    //Will be obsolete once automatic peer discovery is implemented
-    //Actually only 1 IP is needed, but doesn't hurt to add more especially if IP chagnes
-    peers:['10.0.2.15:46661','10.0.2.8:46661','10.0.2.9:46661'],
-    logtendermint: false,
+    // genesis: "demoGenesis.json",
+    // keys: "demoKey1.json",
+    // Peers:[] is required for validators to connect to each other.
+    // Will be obsolete once automatic peer discovery is implemented
+    // Only 1 IP is actually needed, but multiple will make resilient to potential peer IP changes in the future.
+    peers: ['10.0.2.15:46661','10.0.2.8:46661','10.0.2.9:46661'],
+    // peers: [],
+    logtendermint: config.logtendermint || false,
     tendermintPort: 46657,
     p2pPort: 46661,
     devMode: true
@@ -70,6 +71,7 @@ async function getState() {
 app.use(async (state, tx) => {
     console.log('tx', tx);
     switch (tx.command) {
+        // User wants to register a particular transaction to the masteraddress as a deposit into the payment zone network.
         case 'deposit':
             if (typeof tx.depositId === 'string') {
                 console.log('Deposit request for ' + tx.depositId);
@@ -91,6 +93,7 @@ app.use(async (state, tx) => {
             }
             break;
         case 'withdraw':
+            // User wants to withdraw funds from the payment zone into his/her bitcoin account.
             if (typeof tx.amount === 'number' && typeof tx.from === 'string') {
                 console.log(`Withdrawl request for ${tx.amount} from ${tx.from}`);
                 if (tx.amount > 0) {
@@ -104,6 +107,7 @@ app.use(async (state, tx) => {
             }
             break;
         case 'pay':
+            // User wants to send funds from within the payment zone to another address.
             console.log(`Tx request to pay from ${tx.from} an amount of ${tx.amount} satoshis to ${tx.to}.`);
             if (typeof tx.from === 'string' && typeof tx.to === 'string' && typeof tx.amount === 'number' && typeof tx.signature === 'string') {
                 if (IS_DEV_MODE) {
@@ -139,6 +143,8 @@ function startBlockchainNode() {
       console.log('Cosmic Bridge lotion HTTP API listening on port:', config.lotionPort);
       // App identifier.
       console.log('GCI:', GCI);
+  }).catch(e => {
+      console.error('error starting app' ,e);
   });
 }
 

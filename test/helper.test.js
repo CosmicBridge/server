@@ -137,7 +137,8 @@ it('getBalanceNoAccount', () => {
 // In order for these to run, bcoin should be run with full indexes of addresses and transactions. 
 // Example: npx bcoin --network testnet --index-tx --index-address
 
-it('getFirstDepositTxIdForAddress', async () => {
+// Test requires bcoin node running.
+it.skip('getFirstDepositTxIdForAddress', async () => {
 
   let dst, src, txId;
 
@@ -164,7 +165,9 @@ it('getFirstDepositTxIdForAddress', async () => {
   assert.equal(returnedTxId, txId);
 });
 
-it('getBitcoinTransaction', async () => {
+// Test requires bcoin node running.
+it.skip('getBitcoinTransaction', async () => {
+    helper.initNetwork()
   let txId;
   let fee;
 

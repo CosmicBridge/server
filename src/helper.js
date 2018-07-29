@@ -13,10 +13,11 @@ const library = (function () {
     const bcoin = require('bcoin');
 
     // Itamar - seems like the way to set it, even though it's not what the docs show
-    const bitcoinNetwork = bcoin.network.get(config.bitcoinNetwork);
+    const bitcoinNetwork = bcoin.Network.get(config.bitcoinNetwork);
     const client = new NodeClient({
-      network: bitcoinNetwork.type,
-      port: bitcoinNetwork.rpcPort
+        network: bitcoinNetwork.type,
+        port: bitcoinNetwork.rpcPort,
+        apiKey: config.apiKey
     });
 
     function getInitialMasterWalletAddress() {
