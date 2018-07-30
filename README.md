@@ -42,19 +42,17 @@ Generally, connecting to the payment zone should be done via the Tendermint API.
 * User wants to register a particular transaction to the masteraddress as a deposit into the payment zone network.
 To deposit a balance of 3 satoshis onto ADDRESS1, just do:
 
-  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "amount":3.0}'`
+  `curl http://localhost:PORT/txs -d '{"depositId": "XXX", "amount":3.0, "to": "ADDRESS1", "command": "deposit"}'`
   
 * User wants to withdraw funds from the payment zone into his/her bitcoin account.
 To payout a balance of 3 satoshis onto ADDRESS1, just do:
 
-  `curl http://localhost:PORT/txs -d '{"address":"ADDRESS1", "amount":-3.0}'`
+  `curl http://localhost:PORT/txs -d '{"amount":2.0, "from": "ADDRESS1", "command": "withdraw"}'`
 
 * User wants to send funds from within the payment zone to another address.  
-To make a microtransaction of 2 satoshis from ADDRESS1 to ADDRESS2, just do:
+To make a microtransaction of 1 satoshi from ADDRESS1 to ADDRESS2, just do:
 
- `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","amount":2.0}'`
-  or
-  `curl http://localhost:PORT/txs -d '{"fromAddress":"ADDRESS1","toAddress":"ADDRESS2","amount":-2.0}'`
+ `curl http://localhost:PORT/txs -d '{"amount": 1, "from": "ADDRESS1", "to": "ADDRESS2", "signature": "XXX", "command": "pay"}'`
 
 
 ### Checking the app state (Balances).

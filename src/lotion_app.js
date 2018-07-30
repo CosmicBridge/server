@@ -14,7 +14,7 @@ console.log('DEV_MODE', IS_DEV_MODE)
 
 /*
  To register a transaction deposit with cosmicbridge, take the txId and call.
- curl http://localhost:PORT/txs -d '{"depositId": <TxId>, "command": "deposit"}
+ curl http://localhost:PORT/txs -d '{"txHash": <TxId>, "command": "deposit"}
  Your address balance will be credited.
 
  To payout a balance of 3 satoshis onto ADDRESS1, just do:
@@ -72,20 +72,20 @@ app.use(async (state, tx) => {
     switch (tx.command) {
         // User wants to register a particular transaction to the masteraddress as a deposit into the payment zone network.
         case 'deposit':
-            if (typeof tx.depositId === 'string') {
-                console.log('Deposit request for ' + tx.depositId);
+            if (typeof tx.txHash === 'string') {
+                console.log('Deposit request for ' + tx.txHash);
                 if (IS_DEV_MODE) {
-                    helper.deposit(state, tx.to, tx.amount, tx.depositId);
+                    helper.deposit(state, tx.to, tx.amount, tx.txHash);
                     return;
                 }
 
-                const bcoinTx = await helper.getTransaction(tx.depositId);
+                const bcoinTx = await helper.getTransaction(tx.txHash);
                 // Extract an amount (if present) addressed to the master address;
                 const transaction = helper.processDepositTransaction(bcoinTx, state.wallet.masterAddress);
                 if (transaction.amount > 0) {
                     console.log(`Balance added for an amount of ${transaction.amount} satoshis from ${transaction.from}.`);
                     // Claim deposit and register on cosmicbridge.
-                    helper.deposit(state, transaction.from, transaction.amount, tx.depositId);
+                    helper.deposit(state, transaction.from, transaction.amount, tx.txHash);
                 } else {
                     console.log(`Transaction not to ${helper.getMasterWalletAddress()} or has already been claimed`);
                 }
