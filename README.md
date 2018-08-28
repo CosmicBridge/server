@@ -65,6 +65,8 @@ Configuration files are loaded from the `/config` sub-directory. The file `defau
 
 #### Running the Cosmic Bridge app (creating a payment zone).
 
+<b>WARNING:</b> This is a work-in-progress towards a MVP. Do NOT, under any circumstanes, use this in production. The current implementation has MULTIPLE, VERY OBVIOUS security flaws. You have been warned!!!
+
 To start a Cosmic Bridge node, run the following command:
 
 <pre>

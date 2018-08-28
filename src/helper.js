@@ -10,6 +10,7 @@ const library = (function () {
     const bclient = require('bclient');
     const WalletClient = bclient.WalletClient;
     const NodeClient = bclient.NodeClient;
+    const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
 
     const bcoin = require('bcoin');
 
@@ -58,7 +59,7 @@ const library = (function () {
 
         // Now we can broadcast this transaction to the network
         const broadcast = await client.broadcast(tx2.hex);
-        console.log(broadcast);
+        console.log("Broadcast to Bitcoin network: " + broadcast);
         return broadcast;
     }
 
@@ -81,7 +82,7 @@ const library = (function () {
         return result;
     }
 
-    async function getFirstDepositTxIdForAddress(depositorAddress, masterAddress) {
+    async function _getFirstDepositTxIdForAddress(depositorAddress, masterAddress) {
       const txByAddressArr = await client.getTXByAddress(depositorAddress);
       // bcoin returns the transactions in no particular order - at least so it seems
       const sortedTxByAddressArr = txByAddressArr.sort((a, b) => a.time - b.time);
@@ -160,26 +161,41 @@ const library = (function () {
      Performs a transaction on the bitcoin blockchain to payout to UID for
      VAL
      */
-    async function payout(state, uid, amount) {
-        if (hasSufficientBalance(state, uid, amount)) {
-            const tx = await payoutBitcoinBalance(state, uid, amount)
+    async function payout(state, address, amount) {
+        if (hasSufficientBalance(state, address, amount)) {
+            const tx = await payoutBitcoinBalance(state, address, amount)
             return tx;
         } else {
-            console.error("Not enough funds in address", uid, amount);
-            return 'Not enough funds in address ' + uid;
+            let errMessage = `Not enough funds in address ${address} to withdraw ${amount}`;
+            throw new Error(errMessage);
         }
     }
 
-    async function payoutBitcoinBalance(state, uid, amount) {
+    async function payoutBitcoinBalance(state, address, amount) {
         const amountBTC = amount * BTC_PER_SATOSHI;
-        const tx = await creditBitcoinToReceiver(amountBTC, uid, 500);
+        const tx = await creditBitcoinToReceiver(amountBTC, address);
         // Update the state if the TX was successful.
         if (tx) {
-            state.balances[uid] = state.balances[uid] - amount;
+            state.balances[address] = state.balances[address] - amount;
         } else {
-            console.error(`tx was null, could not credit ${amount} satoshi to ${uid}`);
+            let errMessage = `tx was null, could not credit ${amount} satoshi to ${address}`;
+            throw new Error(errMessage);
         }
         return tx;
+    }
+
+    async function ensureOwnershipOfBitcoinAddress(state, address, signature) {
+        // get the bitcoin transaction ID of the first deposit to the address
+        const bitcoinDepositTxId = _getFirstDepositTxIdForAddress(address, state.wallet.masterAddress);
+
+        if (bitcoinDepositTxId === undefined) {
+          console.warn("Failed to prove ownership - cannot find deposit transaction from this address");
+          return false;
+        }
+        else {
+          // We take the bitcoinDepositTxId signed with the address' private key as proof of ownership
+          return secp256k1.verify(bitcoinDepositTxId, tx.signature, tx.from);
+        }
     }
 
     return {
@@ -191,8 +207,8 @@ const library = (function () {
         hasSufficientBalance,
         microTransact,
         getBitcoinTransaction,
-        getFirstDepositTxIdForAddress,
         getInitialMasterWalletAddress,
+        ensureOwnershipOfBitcoinAddress,
         BTC_PER_SATOSHI
     };
 

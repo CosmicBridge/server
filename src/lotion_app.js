@@ -4,7 +4,6 @@
 const axios = require('axios');
 const config = require('config');
 const lotion = require('lotion');
-const secp256k1 = require('secp256k1'); // Elliptic curve cryptography lib
 
 const helper = require('./helper');
 
@@ -87,52 +86,52 @@ app.use(async (state, tx) => {
                     // Claim deposit and register on cosmicbridge.
                     helper.deposit(state, transaction.from, transaction.amount, tx.txHash);
                 } else {
-                    console.log(`Transaction not to ${helper.getMasterWalletAddress()} or has already been claimed`);
+                    console.warn(`Transaction is not to ${helper.getMasterWalletAddress()} or has already been claimed`);
                 }
             }
             break;
         case 'withdraw':
             // User wants to withdraw funds from the payment zone into his/her bitcoin account.
-            if (typeof tx.amount === 'number' && typeof tx.from === 'string') {
+            if (typeof tx.amount === 'number' && typeof tx.from === 'string' && typeof tx.signature === 'string') {
                 console.log(`Withdrawal request for ${tx.amount} from ${tx.from}`);
                 if (tx.amount > 0) {
                     if (IS_DEV_MODE) {
-                        helper.addBalance(state, tx.from, -tx.amount)
+                        helper.addBalance(state, tx.from, -tx.amount);
                         return;
                     }
 
-                    helper.payout(state, tx.from, tx.amount)
+                  // Validate ownership of Bitcoin (we don't want to allow attacks where someone empties someone else's balance,
+                  // costing them tranasction fees, even though they won't receive the bitcoin themselves)
+                  const isOwner = helper.ensureOwnershipOfBitcoinAddress(state, tx.from, tx.signature);
+
+                  if (isOwner)
+                    helper.payout(state, tx.from, tx.amount);
+                  else
+                    console.warn('Withdrawal request rejected - failed to prove ownership');
                 }
             }
             break;
         case 'pay':
             // User wants to send funds from within the payment zone to another address.
-            console.log(`Tx request to pay from ${tx.from} an amount of ${tx.amount} satoshis to ${tx.to}.`);
             if (typeof tx.from === 'string' && typeof tx.to === 'string' && typeof tx.amount === 'number' && typeof tx.signature === 'string') {
+                console.log(`Payment request to pay from ${tx.from} an amount of ${tx.amount} satoshis to ${tx.to}.`);
+
                 if (IS_DEV_MODE) {
                     helper.microTransact(state, tx.from, tx.to, tx.amount);
                     return;
                 }
 
-                // get the bitcoin transaction ID of the claimed deposit, depends on bcoin integration
-                const bitcoinDepositTxId = helper.getFirstDepositTxIdForAddress(tx.from, state.wallet.masterAddress);
-
-                if (bitcoinDepositTxId === undefined) {
-                  console.log("Failed, cannot find deposit transaction from this address");
-                }
-                else {
-                  // Sender should pass in the signature for the bitcoinDepositTxId from one of the deposit transactions as proof of ownership.
-                  const isValid = secp256k1.verify(bitcoinDepositTxId, tx.signature, tx.from);
-                  if (isValid && helper.microTransact(state, tx.from, tx.to, tx.amount)) {
-                      console.log('Success');
-                  } else {
-                      console.log("Failed, not enough balance or invalid signature given");
-                  }
+                // Sender should pass in the signature for the bitcoinDepositTxId from one of the deposit transactions as proof of ownership.
+                const isOwner = helper.ensureOwnershipOfBitcoinAddress(state, tx.from, tx.signature);
+                if (isOwner && helper.microTransact(state, tx.from, tx.to, tx.amount)) {
+                    console.log('Success');
+                } else {
+                    console.warn("Failed, not enough balance or invalid signature given");
                 }
             }
             break;
         default:
-            console.log('No known command given');
+            console.warn('No known command given');
             break;
     }
 });
