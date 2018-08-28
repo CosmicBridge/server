@@ -38,15 +38,15 @@ Connecting to the payment zone is done via the Tendermint API. Transactions have
 
 * <b>Deposit</b> - process a deposit made on the Bitcoin chain to the Payment Zone master address, so the bitcoin can be used for payments in the Cosmic Bridge Payment Zone:
 
-  `curl http://localhost:PORT/txs -d '{"command": "deposit", "txHash": "<Transaction ID of the Bitcoint transaction>"}'`
+  `curl http://localhost:PORT/txs -d '{"command": "deposit", "txHash": "<Transaction ID of the Bitcoin transaction>"}'`
 
 * <b>Pay</b> - perform a payment within the payment zone.
 
-For instance, to perform a microtransaction of 1 satoshi from ADDRESS1 to ADDRESS2:
+  For instance, to perform a microtransaction of 1 satoshi from ADDRESS1 to ADDRESS2:
 
- `curl http://localhost:PORT/txs -d '{"command": "pay", "amount": 1, "from": "ADDRESS1", "to": "ADDRESS2", "signature": "<XXX - see below>"}'`
+  `curl http://localhost:PORT/txs -d '{"command": "pay", "amount": 1, "from": "ADDRESS1", "to": "ADDRESS2", "signature": "<XXX - see below>"}'`
 
-The signature is a proof of ownership. It should be the transaction ID of one of the deposit transactions to the 'from' address, signed with that address' private key. Note that the depositing Bitcoin addresses are used for transaction addressing within the Payment Zone (e.g. on the Cosmos chain) as well - there's no need for 'new' or Cosmic-Bridge-specific addresses.
+  The signature is a proof of ownership. It should be the transaction ID of one of the deposit transactions to the 'from' address, signed with that address' private key. Note that the depositing Bitcoin addresses are used for transaction addressing within the Payment Zone (e.g. on the Cosmos chain) as well - there's no need for "new" or Cosmic-Bridge-specific addresses.
  
 ### Checking the app state (Balances).
 To check the balance of ADDRESS1, just do:
