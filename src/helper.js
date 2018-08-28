@@ -13,7 +13,7 @@ const library = (function () {
 
     const bcoin = require('bcoin');
 
-    // Itamar - seems like the way to set it, even though it's not what the docs show
+    // Seems like the way to set it, even though it's not what the docs show - Itamar
     const bitcoinNetwork = bcoin.Network.get(config.bitcoinNetwork);
     const client = new NodeClient({
         network: bitcoinNetwork.type,
