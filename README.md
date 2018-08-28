@@ -34,27 +34,20 @@ Cosmic Bridge can be used for any application that requires cheap, fast and audi
 Right now the system does not involve stake mechanics, since the idea is to rely on a trusted, well-known set of validators. In the future, staking mechanics, based on BTC staking or a native token, could be implemented easily as Cosmos supports them.
 
 ### How it works
+Connecting to the payment zone is done via the Tendermint API. Transactions have a 'command' field that indicates the type of transaction. Following are examples for possible transactions:
 
-<b>The network supports three main transaction types once the app is running</b>
+* <b>Deposit</b> - process a deposit made on the Bitcoin chain to the Payment Zone master address, so the bitcoin can be used for payments in the Cosmic Bridge Payment Zone:
 
-Generally, connecting to the payment zone should be done via the Tendermint API. Following are a few examples you can run from the command line.
+  `curl http://localhost:PORT/txs -d '{"command": "deposit", "txHash": "<Transaction ID of the Bitcoint transaction>"}'`
 
-* User wants to register a particular transaction to the masteraddress as a deposit into the payment zone network.
-To deposit a balance of 3 satoshis onto ADDRESS1, just do:
+* <b>Pay</b> - perform a payment within the payment zone.
 
-  `curl http://localhost:PORT/txs -d '{"depositId": "XXX", "amount":3.0, "to": "ADDRESS1", "command": "deposit"}'`
-  
-* User wants to withdraw funds from the payment zone into his/her bitcoin account.
-To payout a balance of 3 satoshis onto ADDRESS1, just do:
+For instance, to perform a microtransaction of 1 satoshi from ADDRESS1 to ADDRESS2:
 
-  `curl http://localhost:PORT/txs -d '{"amount":2.0, "from": "ADDRESS1", "command": "withdraw"}'`
+ `curl http://localhost:PORT/txs -d '{"command": "pay", "amount": 1, "from": "ADDRESS1", "to": "ADDRESS2", "signature": "<XXX - see below>"}'`
 
-* User wants to send funds from within the payment zone to another address.  
-To make a microtransaction of 1 satoshi from ADDRESS1 to ADDRESS2, just do:
-
- `curl http://localhost:PORT/txs -d '{"amount": 1, "from": "ADDRESS1", "to": "ADDRESS2", "signature": "XXX", "command": "pay"}'`
-
-
+The signature is a proof of ownership. It should be the transaction ID of one of the deposit transactions to the 'from' address, signed with that address' private key. Note that the depositing Bitcoin addresses are used for transaction addressing within the Payment Zone (e.g. on the Cosmos chain) as well - there's no need for 'new' or Cosmic-Bridge-specific addresses.
+ 
 ### Checking the app state (Balances).
 To check the balance of ADDRESS1, just do:
 

@@ -13,7 +13,7 @@ const IS_DEV_MODE = config.has('isDevelopmentMode') && config.isDevelopmentMode;
 console.log('DEV_MODE', IS_DEV_MODE)
 
 /*
- To register a transaction deposit with cosmicbridge, take the txId and call.
+ To register a Bitcoin deposit with Cosmic Bridge, use the txId and call:
  curl http://localhost:PORT/txs -d '{"txHash": <TxId>, "command": "deposit"}
  Your address balance will be credited.
 
@@ -94,7 +94,7 @@ app.use(async (state, tx) => {
         case 'withdraw':
             // User wants to withdraw funds from the payment zone into his/her bitcoin account.
             if (typeof tx.amount === 'number' && typeof tx.from === 'string') {
-                console.log(`Withdrawl request for ${tx.amount} from ${tx.from}`);
+                console.log(`Withdrawal request for ${tx.amount} from ${tx.from}`);
                 if (tx.amount > 0) {
                     if (IS_DEV_MODE) {
                         helper.addBalance(state, tx.from, -tx.amount)
@@ -132,7 +132,7 @@ app.use(async (state, tx) => {
             }
             break;
         default:
-            console.log('No command given');
+            console.log('No known command given');
             break;
     }
 });
