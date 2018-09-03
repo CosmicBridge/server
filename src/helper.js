@@ -100,7 +100,7 @@ const library = (function () {
         const outputs = tx['outputs']
         outputs.map((output) => {
             if (output.address === masterAddress) {
-                amount = output.value;
+                amount += output.value;
             }
         });
 
