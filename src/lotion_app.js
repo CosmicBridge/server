@@ -12,7 +12,7 @@ const IS_DEV_MODE = config.has('isDevelopmentMode') && config.isDevelopmentMode;
 console.log('DEV_MODE', IS_DEV_MODE)
 
 /*
- To register a Bitcoin deposit with Cosmic Bridge, use the txId and call:
+ To register a Bitcoin deposit with Cosmic Bridge, call (TxId = the bitcoin transaction ID):
  curl http://localhost:PORT/txs -d '{"txHash": <TxId>, "command": "deposit"}
  Your address balance will be credited.
 
@@ -48,7 +48,7 @@ let app = lotion({
         },
         // Accounts keeps track of credited balances for users based on BTC they have sent to the master address.
         deposits: {}, // keeps track of claimed deposit tx ids.
-        balances: {}, // map of {bitcoinAddress: ..., credit: Y}.
+        balances: {}, // map of { bitcoinAddress: <balance in Satoshis> }.
         networkfee: 0.001, // Currently a constant
     },
     // genesis: "genesis.json", // add genesis for production peers. Without a genesis block, the app will create a new GCI each time it's run.
@@ -70,10 +70,14 @@ app.use(async (state, tx) => {
     console.log('tx', tx);
     switch (tx.command) {
         // User wants to register a particular transaction to the masteraddress as a deposit into the payment zone network.
+        // In the future, we could consider watching the bitcoin transactions to our master address ourselvs and not leaving
+        // this to the user. However, it seems prudent to have this on the blockchain so we can have reproducible history
+        // that can be cross-verified with the bitcoin blockchain
         case 'deposit':
             if (typeof tx.txHash === 'string') {
                 console.log('Deposit request for ' + tx.txHash);
                 if (IS_DEV_MODE) {
+                    // Allow simulated deposits in development
                     helper.deposit(state, tx.to, tx.amount, tx.txHash);
                     return;
                 }

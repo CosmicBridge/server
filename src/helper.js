@@ -92,6 +92,8 @@ const library = (function () {
       return firstDepositTx ? firstDepositTx.hash : undefined;
     }
 
+    // Extracts the info we care about for a bitcoin deposit tx into our master address
+    // (doesn't mutate the state in way)
     function processDepositTransaction(tx, masterAddress) {
         const from = tx['inputs']['coin']['address'];
         const depositId = tx['hash'];
