@@ -186,17 +186,29 @@ const library = (function () {
         return tx;
     }
 
-    async function ensureOwnershipOfBitcoinAddress(state, address, signature) {
-        // get the bitcoin transaction ID of the first deposit to the address
-        const bitcoinDepositTxId = _getFirstDepositTxIdForAddress(address, state.wallet.masterAddress);
+    // Returns whether the given signature proves that the party providing it has access to the private key of the given bitcoin address.
+    // The proof is:
+    // 1. If done for first time: The bitcoinDepositTxId of one of the deposit transactions, signed with the depositing address' private key
+    // 2. Otherwise: The last proof of ownership, signed the same way
+    async function processBitcoinOwnershipProof(state, address, signature) {
 
-        if (bitcoinDepositTxId === undefined) {
-          console.warn("Failed to prove ownership - cannot find deposit transaction from this address");
+        let needsToBeSigned =
+          (state.proofs.hasOwnProperty(address)) ?
+          // Iterative proof
+          state.proofs[address] :
+          // First proof: Get the bitcoin transaction ID of the first deposit to the address
+          // (We take the bitcoinDepositTxId signed with the address' private key as the first proof of ownership)
+          _getFirstDepositTxIdForAddress(address, state.wallet.masterAddress);
+
+        if (needsToBeSigned === undefined) {
+          console.warn("Failed to prove ownership - cannot find deposit transaction from this address, or inconsistent blockchain state.");
           return false;
         }
         else {
-          // We take the bitcoinDepositTxId signed with the address' private key as proof of ownership
-          return secp256k1.verify(bitcoinDepositTxId, tx.signature, tx.from);
+          let isVerified = secp256k1.verify(needsToBeSigned, tx.signature, tx.from);
+          if (isVerified)
+            state.proofs[address] = tx.signature;
+          return isVerified;
         }
     }
 
@@ -210,7 +222,7 @@ const library = (function () {
         microTransact,
         getBitcoinTransaction,
         getInitialMasterWalletAddress,
-        ensureOwnershipOfBitcoinAddress,
+        processBitcoinOwnershipProof,
         BTC_PER_SATOSHI
     };
 

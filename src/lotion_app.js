@@ -47,9 +47,9 @@ let app = lotion({
           masterAddress: helper.getInitialMasterWalletAddress()
         },
         // Accounts keeps track of credited balances for users based on BTC they have sent to the master address.
-        deposits: {}, // keeps track of claimed deposit tx ids.
-        balances: {}, // map of { bitcoinAddress: <balance in Satoshis> }.
-        networkfee: 0.001, // Currently a constant
+        deposits: {}, // keeps track of claimed deposit tx ids
+        balances: {}, // map of { bitcoinAddress: <balance in Satoshis> }
+        proofs: {} // map of { bitcoinAddress: <last proof of ownership used> }
     },
     // genesis: "genesis.json", // add genesis for production peers. Without a genesis block, the app will create a new GCI each time it's run.
     // keys: "key.json", // add keys for production peers.
@@ -106,7 +106,7 @@ app.use(async (state, tx) => {
 
                   // Validate ownership of Bitcoin (we don't want to allow attacks where someone empties someone else's balance,
                   // costing them tranasction fees, even though they won't receive the bitcoin themselves)
-                  const isOwner = helper.ensureOwnershipOfBitcoinAddress(state, tx.from, tx.signature);
+                  const isOwner = helper.processBitcoinOwnershipProof(state, tx.from, tx.signature);
 
                   if (isOwner)
                     helper.payout(state, tx.from, tx.amount);
@@ -125,8 +125,8 @@ app.use(async (state, tx) => {
                     return;
                 }
 
-                // Sender should pass in the signature for the bitcoinDepositTxId from one of the deposit transactions as proof of ownership.
-                const isOwner = helper.ensureOwnershipOfBitcoinAddress(state, tx.from, tx.signature);
+                // Sender should pass in a proof for actual ownership of that bitcoin address
+                const isOwner = helper.processBitcoinOwnershipProof(state, tx.from, tx.signature);
                 if (isOwner && helper.microTransact(state, tx.from, tx.to, tx.amount)) {
                     console.log('Success');
                 } else {
